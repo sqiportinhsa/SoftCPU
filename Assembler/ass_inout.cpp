@@ -20,7 +20,7 @@ size_t read_file(char text[], size_t amount_of_symbols, const char* file_name) {
 int count_strings(char text[], size_t amount_of_symbols) {
     int amount_of_strings = 0;
     for (size_t i = 0; i < amount_of_symbols; ++i) {
-        if (text[i] == '\n') {
+        if (text[i] == '\n' || text[i] == '\0') {
             ++amount_of_strings;
         }
     }
@@ -35,6 +35,7 @@ void place_pointers(Command commands[], char *text, size_t amount_of_symbols,
 
     while (nstring < amount_of_strings && nsym < amount_of_symbols) {
         int cmd_len = 0;
+        //printf("start\n");
 
         for (; text[nsym] == ' '; ++nsym);
 
