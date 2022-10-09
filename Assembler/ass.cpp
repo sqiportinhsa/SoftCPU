@@ -7,17 +7,14 @@ void assemble(Command* commands, int amount_of_strings) {
     int ncommand = 0;
 
     FILE *output = fopen("assembled.txt", "w");
-    printf("%s\n", commands[4].cmd_ptr);
-    printf("%d\n", amount_of_strings);
 
     while (ncommand < amount_of_strings) {
-        printf("%d", stricmp(commands[ncommand].cmd_ptr, "HLT"));
-        printf("start %d\n", ncommand);
+        //printf("start %d\n", ncommand);
         do_command(output, commands, ncommand);
-        printf("done  %d\n", ncommand);
+        //printf("done  %d\n", ncommand);
         ++ncommand;
     }
-    printf("all done");
+    //printf("all done");
     fclose(output);
 }
 
