@@ -31,7 +31,7 @@ void do_command(FILE *output, Command* commands, int ncommand) {
             printf("incorrect push: value expected\n");
             return;
         }
-        fprintf(output, "%d %d\n", PUSH, *commands[ncommand].val_ptr);
+        fprintf(output, "%d %d\n", PUSH, calculate_val(commands[ncommand].val_ptr));
 
     } else if (stricmp("ADD", cmd) == 0) {
         fprintf(output, "%d\n", ADD);
@@ -54,4 +54,14 @@ void do_command(FILE *output, Command* commands, int ncommand) {
     } else {
         printf("invalid command\n");
     }
+}
+
+int calculate_val(char *val_ptr) {
+    int val = 0;
+
+    for (int i = 0; *(val_ptr + i) >= '0' && *(val_ptr + i) <= '9'; ++i) {
+        val = val*10 + (*(val_ptr + i) - '0');
+    }
+
+    return val;
 }

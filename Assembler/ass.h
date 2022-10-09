@@ -13,5 +13,6 @@ typedef struct {
 
 void assemble(Command* commands, int amount_of_strings);
 void do_command(FILE *output1, Command* commands, int ncommand);
+int calculate_val(char *val_ptr);
 
 #endif
