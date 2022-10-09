@@ -178,7 +178,7 @@ Error ResizeStack(Stack *stk, size_t capacity) {
     return NO_ERROR;
 }
 
-int IsPoisoned(double el1) {
+int IsPoisoned(Elem_t el1) {
     if (memcmp(&el1, &Poisoned_cell, sizeof(Elem_t)) == 0) {
         return 1;
     }

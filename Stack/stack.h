@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <math.h>
 
-typedef double Elem_t;
-const Elem_t Poisoned_cell = nan("57");
+typedef int Elem_t;
+const Elem_t Poisoned_cell = 57;
+
+#define PFORMAT "%-10d"
 
 typedef unsigned long long Canary_t;
 const Canary_t Border = 0XBAAD7004;
@@ -61,6 +63,6 @@ int StackPush(Stack *stk, Elem_t value);
 Elem_t StackPop(Stack *stk, int *err = nullptr);
 Error ResizeStack(Stack *stk, size_t capacity);
 Error PoisonCells(Stack *stk, size_t n_cells);
-int IsPoisoned(double el1);
+int IsPoisoned(Elem_t el1);
 
 #endif
