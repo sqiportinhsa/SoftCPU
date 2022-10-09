@@ -19,9 +19,9 @@ int main() {
 
     amount_of_elements = read_file(text, amount_of_elements, "input.txt");
 
-    for (size_t i = 0; i < amount_of_elements; ++i) {
+    /*for (size_t i = 0; i < amount_of_elements; ++i) {
         printf("<%c>: <%d>\n", text[i], text[i]);
-    }
+    }*/
     
     int amount_of_strings = count_strings(text, amount_of_elements);
 

@@ -22,9 +22,6 @@ void do_command(Stack *stk, Command* commands, int ncommand) {
     memcpy(cmd, commands[ncommand].cmd_ptr, len);
     cmd[len] = '\0';
 
-    printf("%d"  , stricmp("PUSH", "PUSH"));
-    printf("%d\n", stricmp("OUT", cmd));
-
     if (stricmp("PUSH", cmd) == 0) {
         if (commands[ncommand].val_ptr == nullptr) {
             printf("incorrect push: value expected\n");
@@ -57,14 +54,10 @@ void do_command(Stack *stk, Command* commands, int ncommand) {
         StackPush(stk, b / a);
 
     } else if (stricmp("OUT", cmd) == 0) {
-        printf("i don't wanna work\n");
         printf("%lf", StackPop(stk));
-        printf("yeach\n");
     } else if (stricmp("HLT", cmd) == 0) {
-
+        return;
     } else {
         printf("invalid command\n");
     }
-
-    DumpLogs(stk);
 }

@@ -39,7 +39,7 @@ void place_pointers(Command commands[], char *text, size_t amount_of_symbols,
         for (; text[nsym] == ' '; ++nsym);
 
         commands[nstring].cmd_ptr = &(text[nsym]);
-        printf("number of command %d first sym: %lld. First symbol: %c\n", nstring, nsym, text[nsym]);
+        //printf("number of command %d first sym: %lld. First symbol: %c\n", nstring, nsym, text[nsym]);
 
         for (; isalpha(text[nsym]); ++nsym, ++cmd_len);
 
@@ -51,12 +51,12 @@ void place_pointers(Command commands[], char *text, size_t amount_of_symbols,
             commands[nstring].val_ptr = nullptr;
             ++nsym;
             ++nstring;
-            printf("there is no value for this command.\n");
+            //printf("there is no value for this command.\n");
             continue;
         }
 
         commands[nstring].val_ptr = &(text[nsym]);
-        printf("number of value's position: %lld\n", nsym);
+        //printf("number of value's position: %lld\n", nsym);
 
         for (; text[nsym] != '\n'; ++nsym);
 
