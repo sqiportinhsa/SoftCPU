@@ -54,7 +54,7 @@ void do_command(Stack *stk, Command* commands, int ncommand) {
         StackPush(stk, b / a);
 
     } else if (stricmp("OUT", cmd) == 0) {
-        printf("%lf", StackPop(stk));
+        printf(PFORMAT, StackPop(stk));
     } else if (stricmp("HLT", cmd) == 0) {
         return;
     } else {
