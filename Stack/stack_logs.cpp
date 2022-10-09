@@ -100,7 +100,7 @@ void RealDumpLogs(Stack *stk, const char *file, const char *func, int line, int 
         #endif
 
         for (size_t i = 0; i < stk->size && i < stk->capacity; ++i) {
-            Print(logs, "\t \t*[%zd] = %-10lf",   i, stk->data[i]);
+            Print(logs, "\t \t*[%zd] = " PFORMAT,   i, stk->data[i]);
             #ifdef DEEP_VERIFICATION
             if (IsPoisoned(stk->data[i])) {
                 Print(logs, " (poisoned)");
@@ -113,7 +113,7 @@ void RealDumpLogs(Stack *stk, const char *file, const char *func, int line, int 
 
 
         for (size_t i = stk->size; i < stk->capacity; ++i) {
-            Print(logs, "\t \t [%zd] = %-10lf", i, stk->data[i]);
+            Print(logs, "\t \t [%zd] = " PFORMAT, i, stk->data[i]);
             #ifdef DEEP_VERIFICATION
             if (IsPoisoned(stk->data[i])) {
                 Print(logs, " (poisoned)");
