@@ -4,14 +4,14 @@ CPPFLAGS = -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-e
 .PHONY: all
 all: $(TARGET)
 
-$(TARGET): Assembler\bin\ass_main.o Assembler\bin\ass_inout.o Assembler\bin\ass.o Stack\bin\stack.o Stack\bin\stack_logs.o Stack\bin\verification.o
-	g++ Assembler\bin\ass_main.o Assembler\bin\ass_inout.o Assembler\bin\ass.o Stack\bin\stack.o Stack\bin\stack_logs.o Stack\bin\verification.o -o $(TARGET) $(CPPFLAGS)
+$(TARGET): Assembler\bin\ass_main.o Assembler\bin\ass.o Stack\bin\stack.o Stack\bin\stack_logs.o Stack\bin\verification.o Common_bin\file_reading.o
+	g++ Assembler\bin\ass_main.o Assembler\bin\ass.o Stack\bin\stack.o Stack\bin\stack_logs.o  Stack\bin\verification.o Common_bin\file_reading.o -o $(TARGET) $(CPPFLAGS)
 
 Assembler\bin\ass_main.o: Assembler\ass_main.cpp
 	g++ -c Assembler\ass_main.cpp -o Assembler\bin\ass_main.o $(CPPFLAGS)
 
-Assembler\bin\ass_inout.o: Assembler\ass_inout.cpp
-	g++ -c Assembler\ass_inout.cpp -o Assembler\bin\ass_inout.o $(CPPFLAGS)
+Common_bin\file_reading.o: file_reading.cpp
+	g++ -c file_reading.cpp -o Common_bin\file_reading.o $(CPPFLAGS)
 
 Assembler\bin\ass.o: Assembler\ass.cpp
 	g++ -c Assembler\ass.cpp -o Assembler\bin\ass.o $(CPPFLAGS)
