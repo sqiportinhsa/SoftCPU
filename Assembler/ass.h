@@ -13,7 +13,6 @@ typedef struct {
 
 void assemble(Command* commands, int amount_of_strings);
 void do_command(FILE *output1, Command* commands, int ncommand);
-int calculate_val(char *val_ptr);
 void place_pointers(Command commands[], char *text, size_t amount_of_symbols, 
                                                        int amount_of_strings);
 

@@ -31,3 +31,13 @@ int count_strings(char text[], size_t amount_of_symbols) {
     }
     return amount_of_strings;
 }
+
+int get_val(char *val_ptr) {
+    int val = 0;
+
+    for (int i = 0; *(val_ptr + i) >= '0' && *(val_ptr + i) <= '9'; ++i) {
+        val = val*10 + (*(val_ptr + i) - '0');
+    }
+
+    return val;
+}
