@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 
 #include "..\common.h"
 #include "ass.h"
@@ -64,4 +65,43 @@ int calculate_val(char *val_ptr) {
     }
 
     return val;
+}
+
+void place_pointers(Command commands[], char *text, size_t amount_of_symbols, 
+                                                       int amount_of_strings) {
+    commands[0].cmd_ptr = &(text[0]);
+    int nstring = 0;
+    size_t nsym = 0;
+
+    while (nstring < amount_of_strings && nsym < amount_of_symbols) {
+        int cmd_len = 0;
+        //printf("start\n");
+
+        for (; text[nsym] == ' '; ++nsym);
+
+        commands[nstring].cmd_ptr = &(text[nsym]);
+        //printf("number of command %d first sym: %lld. First symbol: %c\n", nstring, nsym, text[nsym]);
+
+        for (; isalpha(text[nsym]); ++nsym, ++cmd_len);
+
+        commands[nstring].cmd_len = cmd_len;
+
+        for (; text[nsym] == ' '; ++nsym);
+
+        if (text[nsym] == '\n') {
+            commands[nstring].val_ptr = nullptr;
+            ++nsym;
+            ++nstring;
+            //printf("there is no value for this command.\n");
+            continue;
+        }
+
+        commands[nstring].val_ptr = &(text[nsym]);
+        //printf("number of value's position: %lld\n", nsym);
+
+        for (; text[nsym] != '\n'; ++nsym);
+
+        ++nsym;
+        ++nstring;
+    }
 }
