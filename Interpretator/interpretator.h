@@ -1,5 +1,5 @@
-#ifndef ASSMBLR
-#define ASSMBLR
+#ifndef INTERPRETATOR
+#define INTERPRETATOR
 
 #include "..\Stack\stack.h"
 #include "..\Stack\stack_logs.h"

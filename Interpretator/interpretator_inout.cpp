@@ -2,7 +2,7 @@
 #include <ctype.h>
 #include <sys\stat.h>
 
-#include "ass_inout.h"
+#include "interpretator_inout.h"
 
 size_t read_file(char text[], size_t amount_of_symbols, const char* file_name) {
     FILE *input = fopen(file_name, "r");

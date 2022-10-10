@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ass_inout.h"
-#include "assemblr.h"
+#include "interpretator_inout.h"
+#include "interpretator.h"
 #include "..\Stack\stack.h"
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"

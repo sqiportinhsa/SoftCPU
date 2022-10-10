@@ -1,7 +1,7 @@
-#ifndef ASS_INOUT
-#define ASS_INOUT
+#ifndef INTERPRETATOR_INOUT
+#define INTERPRETATOR_INOUT
 
-#include "assemblr.h"
+#include "interpretator.h"
 
 size_t count_elements_in_file(char file_name[]);
 size_t read_file(char text[], size_t amount_of_symbols, const char* file_name);

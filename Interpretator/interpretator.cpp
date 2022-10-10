@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "..\common.h"
-#include "assemblr.h"
+#include "interpretator.h"
 
 void calculate(Command* commands, int amount_of_strings) {
     int ncommand = 0;
