@@ -33,25 +33,25 @@ void do_command(FILE *output, Command* commands, int ncommand) {
             printf("incorrect push: value expected\n");
             return;
         }
-        fprintf(output, "%d %d\n", PUSH, get_val(commands[ncommand].val_ptr));
+        fprintf(output, "%d %d\n", PUSH_CMD, get_val(commands[ncommand].val_ptr));
 
     } else if (stricmp("ADD", cmd) == 0) {
-        fprintf(output, "%d\n", ADD);
+        fprintf(output, "%d\n", ADD_CMD);
 
     } else if (stricmp("SUB", cmd) == 0) {
-        fprintf(output, "%d\n", SUB);
+        fprintf(output, "%d\n", SUB_CMD);
 
     } else if (stricmp("MUL", cmd) == 0) {
-        fprintf(output, "%d\n", MUL);
+        fprintf(output, "%d\n", MUL_CMD);
 
     } else if (stricmp("DIV", cmd) == 0) {
-        fprintf(output, "%d\n", DIV);
+        fprintf(output, "%d\n", DIV_CMD);
 
     } else if (stricmp("OUT", cmd) == 0) {
-        fprintf(output, "%d\n", OUT);
+        fprintf(output, "%d\n", OUT_CMD);
 
     } else if (stricmp("HLT", cmd) == 0) {
-        fprintf(output, "%d",   HLT);
+        fprintf(output, "%d",   HLT_CMD);
 
     } else {
         printf("invalid command\n");
