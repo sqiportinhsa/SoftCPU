@@ -3,7 +3,7 @@
 
 #include "file_reading.h"
 
-size_t count_elements_in_file(char file_name[]) {
+size_t count_elements_in_file(const char file_name[]) {
     struct stat a = {};
     stat(file_name, &a);
     return a.st_size;
@@ -32,11 +32,16 @@ int count_strings(char text[], size_t amount_of_symbols) {
     return amount_of_strings;
 }
 
-int get_val(char *val_ptr) {
-    int val = 0;
+int get_val(char *val_ptr, size_t *val_ptr_ptr) {
+    int val     = 0;
+    int val_len = 0;
 
-    for (int i = 0; *(val_ptr + i) >= '0' && *(val_ptr + i) <= '9'; ++i) {
-        val = val*10 + (*(val_ptr + i) - '0');
+    for (; *(val_ptr + val_len) >= '0' && *(val_ptr + val_len) <= '9'; ++val_len) {
+        val = val*10 + (*(val_ptr + val_len) - '0');
+    }
+
+    if (val_ptr_ptr != nullptr) {
+        *val_ptr_ptr += val_len;
     }
 
     return val;
