@@ -32,17 +32,14 @@ int count_strings(char text[], size_t amount_of_symbols) {
     return amount_of_strings;
 }
 
-int get_val(char *val_ptr, size_t *val_ptr_ptr) {
-    int val     = 0;
+int get_val(char *ptr_to_first_elem, int *ptr_to_val) {
     int val_len = 0;
 
-    for (; *(val_ptr + val_len) >= '0' && *(val_ptr + val_len) <= '9'; ++val_len) {
-        val = val*10 + (*(val_ptr + val_len) - '0');
+    for (; *(ptr_to_first_elem + val_len) >= '0' && 
+           *(ptr_to_first_elem + val_len) <= '9'; ++val_len) {
+
+        *ptr_to_val = *ptr_to_val*10 + (*(ptr_to_first_elem + val_len) - '0');
     }
 
-    if (val_ptr_ptr != nullptr) {
-        *val_ptr_ptr += val_len;
-    }
-
-    return val;
+    return val_len;
 }
