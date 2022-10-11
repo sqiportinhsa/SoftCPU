@@ -10,6 +10,8 @@ void assemble(Command* commands, int amount_of_strings) {
 
     FILE *output = fopen("assembled.txt", "w");
 
+    fprintf(output, "%d %d ", ASS_VER, amount_of_strings);
+
     while (ncommand < amount_of_strings) {
         //printf("start %d\n", ncommand);
         do_command(output, commands, ncommand);
@@ -33,25 +35,30 @@ void do_command(FILE *output, Command* commands, int ncommand) {
             printf("incorrect push: value expected\n");
             return;
         }
-        fprintf(output, "%d %d\n", PUSH_CMD, get_val(commands[ncommand].val_ptr));
+        
+        int val_for_push = 0;
+
+        get_val(commands[ncommand].val_ptr, &val_for_push);
+
+        fprintf(output, "%d %d ", PUSH_CMD, val_for_push);
 
     } else if (stricmp("ADD", cmd) == 0) {
-        fprintf(output, "%d\n", ADD_CMD);
+        fprintf(output, "%d ", ADD_CMD);
 
     } else if (stricmp("SUB", cmd) == 0) {
-        fprintf(output, "%d\n", SUB_CMD);
+        fprintf(output, "%d ", SUB_CMD);
 
     } else if (stricmp("MUL", cmd) == 0) {
-        fprintf(output, "%d\n", MUL_CMD);
+        fprintf(output, "%d ", MUL_CMD);
 
     } else if (stricmp("DIV", cmd) == 0) {
-        fprintf(output, "%d\n", DIV_CMD);
+        fprintf(output, "%d ", DIV_CMD);
 
     } else if (stricmp("OUT", cmd) == 0) {
-        fprintf(output, "%d\n", OUT_CMD);
+        fprintf(output, "%d ", OUT_CMD);
 
     } else if (stricmp("HLT", cmd) == 0) {
-        fprintf(output, "%d",   HLT_CMD);
+        fprintf(output, "%d ",   HLT_CMD);
 
     } else {
         printf("invalid command\n");
