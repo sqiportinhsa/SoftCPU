@@ -4,10 +4,10 @@ CPPFLAGS = -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-e
 .PHONY: all
 all: $(TARGET)
 
-$(TARGET): Processor\bin\processor_main.o Processor\bin\processor.o Stack\bin\stack.o Stack\bin\stack_logs.o Stack\bin\verification.o Common_bin\file_reading.o
-	g++ Processor\bin\processor_main.o Processor\bin\processor.o Stack\bin\stack.o Stack\bin\stack_logs.o Stack\bin\verification.o Common_bin\file_reading.o -o $(TARGET) $(CPPFLAGS)
+$(TARGET): Processor\bin\processor_main.o Processor\bin\processor.o Stack\bin\stack.o Stack\bin\stack_logs.o Stack\bin\verification.o Common\bin\file_reading.o Common\bin\utils.o
+	g++ Processor\bin\processor_main.o Processor\bin\processor.o Stack\bin\stack.o Stack\bin\stack_logs.o Stack\bin\verification.o Common\bin\file_reading.o Common\bin\utils.o -o $(TARGET) $(CPPFLAGS)
 
-Processor\bin\processor_main.o: Processor\processor_main.cpp Processor\processor.h file_reading.h
+Processor\bin\processor_main.o: Processor\processor_main.cpp Processor\processor.h Common\file_reading.h
 	g++ -c Processor\processor_main.cpp -o Processor\bin\processor_main.o $(CPPFLAGS)
 
 Processor\bin\processor.o: Processor\processor.cpp Processor\processor.h
@@ -22,5 +22,8 @@ Stack\bin\stack_logs.o: Stack\stack_logs.cpp Stack\stack.h Stack\stack_logs.h
 Stack\bin\verification.o: Stack\stack_verification.cpp Stack\stack.h Stack\stack_verification.h
 	g++ -c Stack\stack_verification.cpp -o Stack\bin\verification.o $(CPPFLAGS)
 
-Common_bin\file_reading.o: file_reading.cpp
-	g++ -c file_reading.cpp -o Common_bin\file_reading.o $(CPPFLAGS)
+Common\bin\file_reading.o: Common\file_reading.cpp Common\file_reading.h
+	g++ -c Common\file_reading.cpp -o Common\bin\file_reading.o $(CPPFLAGS)
+
+Common\bin\utils.o: Common\utils.cpp Common\utils.h
+	g++ -c Common\utils.cpp -o Common\bin\utils.o $(CPPFLAGS)
