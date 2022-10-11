@@ -15,17 +15,25 @@ int main() {
 
     amount_of_elements = read_file(text, amount_of_elements, "assembled.txt");
 
-    char *ip = &(text[0]);
-
+    int ip = 0;
     int ass_ver = 0;
     int amount_of_commands = 0;
 
-    ip += get_val(ip, &ass_ver);
-    ++ip;
-    ip += get_val(ip, &amount_of_commands);
+    ip += get_val(&(text[ip]), &ass_ver);
     ++ip;
 
-    printf("%d", amount_of_commands);
+    //printf("%d ", ip);
+
+    ip += get_val(&(text[ip]), &amount_of_commands);
+    ++ip;
+
+    //printf("%d\n", ip);
+
+    //printf("%d %d\n", ass_ver, amount_of_commands);
+
+    /*for(size_t i = 0; i < amount_of_elements; ++i) {
+        printf("<%c>", text[i]);
+    }*/
 
     Command *commands = (Command*) calloc(amount_of_commands, sizeof(Command));
     if (commands == nullptr) {
@@ -33,7 +41,7 @@ int main() {
         return -1;
     }
 
-    get_commands(ip, commands, amount_of_elements);
+    get_commands(&(text[ip]), commands, amount_of_elements - ip - 3);
 
     free(text);
 
