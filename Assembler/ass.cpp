@@ -2,8 +2,8 @@
 #include <ctype.h>
 
 #include "ass.h"
-#include "..\common.h"
-#include "..\file_reading.h"
+#include "..\Common\common.h"
+#include "..\Common\file_reading.h"
 
 void assemble(Command* commands, int amount_of_strings) {
     int ncommand = 0;

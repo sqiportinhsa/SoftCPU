@@ -5,7 +5,7 @@
 #include "..\Stack\stack.h"
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"
-#include "..\file_reading.h"
+#include "..\Common\file_reading.h"
 
 int main() {
     size_t amount_of_elements = count_elements_in_file("input.txt");
