@@ -6,29 +6,41 @@
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"
 
-void get_commands(char *text, Command *commands, size_t amount_of_elems) {
+int get_commands(char *text, Command *commands, size_t amount_of_elems) {
     int n_command = 0;
     size_t n_elem = 0;
 
     while (n_elem < amount_of_elems) {
         int cmd = 0;
 
+        //printf("ptr before:                  %lld\n", n_elem);
+
         n_elem += get_val(&(text[n_elem]), &cmd);
+
+        //printf("ptr after getting a command: %lld\n", n_elem);
 
         commands[n_command].cmd = get_cmd(cmd);
 
         ++n_elem;
 
+        //printf("ptr to next symbol:          %lld\n", n_elem);
+
         switch (commands[n_command].cmd) {
             case PUSH_CMD:
                 n_elem += get_val(&(text[n_elem]), &(commands[n_command].val));
                 ++n_elem;
+                //printf("ptr to sym after value:      %lld\n", n_elem);
                 break;
             default:
                 commands[n_command].val = 0;
         }
+
+        //printf("%d ",  commands[n_command].val);
+        //printf("%d\n", commands[n_command].cmd);
         ++n_command;
     }
+
+    return n_command;
 }
 
 Commands get_cmd(int val) {
