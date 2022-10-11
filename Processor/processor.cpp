@@ -6,17 +6,22 @@
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"
 
-void get_commands(char *text, Command *commands, int amount_of_commands, size_t amount_of_elems) {
+void get_commands(char *text, Command *commands, size_t amount_of_elems) {
     int n_command = 0;
     size_t n_elem = 0;
 
-    while (n_command < amount_of_commands && n_elem < amount_of_elems) {
-        commands[n_command].cmd = get_cmd(get_val(&(text[n_elem]), &n_elem));
+    while (n_elem < amount_of_elems) {
+        int cmd = 0;
+
+        n_elem += get_val(&(text[n_elem]), &cmd);
+
+        commands[n_command].cmd = get_cmd(cmd);
+
         ++n_elem;
 
         switch (commands[n_command].cmd) {
             case PUSH_CMD:
-                commands[n_command].val = get_val(&(text[n_elem]), &n_elem);
+                n_elem += get_val(&(text[n_elem]), &(commands[n_command].val));
                 ++n_elem;
                 break;
             default:
