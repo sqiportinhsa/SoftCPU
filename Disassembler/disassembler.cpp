@@ -1,16 +1,28 @@
 #include <stdio.h>
 
 #include "disassembler.h"
+#include "..\Common\file_reading.h"
 
-void disassemble(Command *commands, int amount_of_commands) {
-    int n_command = 0;
-
+void disassemble(char *text, int amount_of_commands, size_t amount_of_symbols) {
     FILE *output = fopen("disassembled.txt", "w");
 
-    while (n_command < amount_of_commands) {
-        switch (commands[n_command].cmd) {
+    int n_command = 0;
+    size_t n_elem = 0;
+
+    
+
+    while (n_command < amount_of_commands && n_elem < amount_of_symbols) {
+        int cmd = 0;
+        n_elem += get_val(&(text[n_elem]), &cmd);
+        ++n_elem;
+
+        int cmd_val = 0;
+
+        switch (cmd) {
             case PUSH_CMD:
-                fprintf(output, "PUSH %d\n", commands[n_command].val);
+                n_elem += get_val(&(text[n_elem]), &cmd_val);
+                ++n_elem;
+                fprintf(output, "PUSH %d\n", cmd_val);
                 break;
             case ADD_CMD:
                 fprintf(output, "ADD\n");
@@ -34,7 +46,7 @@ void disassemble(Command *commands, int amount_of_commands) {
                 break;
         }
 
-        if (commands[n_command].cmd == HLT_CMD) {
+        if (cmd == HLT_CMD) {
             break;
         }
 

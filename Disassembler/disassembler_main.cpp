@@ -36,19 +36,9 @@ int main() {
         printf("<%c>", text[i]);
     }*/
 
-    Command *commands = (Command*) calloc(amount_of_commands, sizeof(Command));
-    if (commands == nullptr) {
-        printf("memory limit exceed");
-        return -1;
-    }
-
-    get_commands(&(text[ip]), commands, amount_of_elements - ip - 3);
+    disassemble(&(text[ip]), amount_of_commands, amount_of_elements);
 
     free(text);
-
-    disassemble(commands, amount_of_commands);
-
-    free(commands);
 
     return 0;
 }
