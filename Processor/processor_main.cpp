@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "processor.h"
-#include "..\file_reading.h"
+#include "..\Common\file_reading.h"
 
 int main() {
     size_t amount_of_elements = count_elements_in_file("assembled.txt");
