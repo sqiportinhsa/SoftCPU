@@ -5,39 +5,33 @@
 #include "..\Common\file_reading.h"
 
 int main() {
-    size_t amount_of_elements = count_elements_in_file("assembled.txt");
+    CPU cpu = {};
 
-    char* text = (char*) calloc(amount_of_elements, sizeof(char));
-    if (text == nullptr) {
-        printf("memory limit exceed");
-        return -1;
-    }
+    size_t code_len = count_elements_in_file("assembled.txt");
 
-    amount_of_elements = read_file(text, amount_of_elements, "assembled.txt");
+    CPU_constructor(&cpu, code_len);
 
-    int ip = 0;
-    int ass_ver = 0;
-    int amount_of_commands = 0;
+    cpu.code_len = read_file(cpu.code, cpu.code_len, "assembled.txt");
 
-    ip += get_val(&(text[ip]), &ass_ver);
-    ++ip;
+    cpu.ip += get_val(&(cpu.code[cpu.ip]), &cpu.ass_version);
+    ++cpu.ip;
 
-    //printf("%d ", ip);
+    //printf("%d ", cpu.ip);
 
-    ip += get_val(&(text[ip]), &amount_of_commands);
-    ++ip;
+    cpu.ip += get_val(&(cpu.code[cpu.ip]), &cpu.amount_of_cmds);
+    ++cpu.ip;
 
-    //printf("%d\n", ip);
+    //printf("%d\n", cpu.ip);
 
-    //printf("%d %d\n", ass_ver, amount_of_commands);
+    //printf("%d %d\n", cpu.ass_version, cpu.amount_of_cmds);
 
-    /*for(size_t i = 0; i < amount_of_elements; ++i) {
-        printf("<%c>", text[i]);
+    /*for(size_t i = 0; i < cpu.code_len; ++i) {
+        printf("<%c>", cpu.code[i]);
     }*/
 
-    calculate(&(text[ip]), amount_of_commands, amount_of_elements);
+    calculate(&cpu);
 
-    free(text);
+    CPU_destructor(&cpu);
 
     return 0;
 }

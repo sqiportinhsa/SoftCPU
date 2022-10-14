@@ -6,17 +6,13 @@
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"
 
-void calculate(char *text, int amount_of_commands, size_t amount_of_symbols) {
-    Stack stk = {};
-    StackCtr(&stk, 0);
-
+void calculate(CPU *cpu) {
     int n_command = 0;
-    size_t n_elem = 0;
 
-    while (n_command < amount_of_commands && n_elem < amount_of_symbols) {
+    while (n_command < cpu->amount_of_cmds && cpu->ip < cpu->code_len) {
         int cmd = 0;
-        n_elem += get_val(&(text[n_elem]), &cmd);
-        ++n_elem;
+        cpu->ip += get_val(&(cpu->code[cpu->ip]), &cmd);
+        ++cpu->ip;
 
         if (cmd == HLT_CMD) {
             break;
@@ -27,26 +23,26 @@ void calculate(char *text, int amount_of_commands, size_t amount_of_symbols) {
 
         switch (cmd) {
             case PUSH_CMD:
-                n_elem += get_val(&(text[n_elem]), &cmd_val);
-                ++n_elem;
-                StackPush(&stk, cmd_val);
+                cpu->ip += get_val(&(cpu->code[cpu->ip]), &cmd_val);
+                ++cpu->ip;
+                StackPush(cpu->cpu_stack, cmd_val);
                 break;
             case ADD_CMD:
-                StackPush(&stk, StackPop(&stk) + StackPop(&stk));
+                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) + StackPop(cpu->cpu_stack));
                 break;
             case SUB_CMD:
-                first_popped = StackPop(&stk);
-                StackPush(&stk, StackPop(&stk) - first_popped  );
+                first_popped = StackPop(cpu->cpu_stack);
+                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped  );
                 break;
             case MUL_CMD:
-                StackPush(&stk, StackPop(&stk) * StackPop(&stk));
+                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) * StackPop(cpu->cpu_stack));
                 break;
             case DIV_CMD:
-                first_popped = StackPop(&stk);
-                StackPush(&stk, StackPop(&stk) / first_popped  );
+                first_popped = StackPop(cpu->cpu_stack);
+                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped  );
                 break;
             case OUT_CMD:
-                printf("result: %d", StackPop(&stk));
+                printf("result: %d", StackPop(cpu->cpu_stack));
                 break;
             default:
                 break;
@@ -54,6 +50,36 @@ void calculate(char *text, int amount_of_commands, size_t amount_of_symbols) {
 
         ++n_command;
     }
+}
 
-    StackDestr(&stk);
+void CPU_constructor(CPU *cpu, size_t code_len) {
+    cpu->cpu_stack = (Stack*) calloc(1, sizeof(Stack));
+    if (cpu->cpu_stack == nullptr) {
+        printf("error: not enought memory for stack in CPU constructor\n");
+        free(cpu->code);
+        free(cpu->cpu_stack);
+        return;
+    }
+
+    StackCtr(cpu->cpu_stack, 0);
+
+    cpu->code = (char*) calloc(code_len, sizeof(char));
+    if (cpu->code == nullptr) {
+        printf("error: not enougth memory for code in CPU constructor\n");
+        free(cpu->code);
+        free(cpu->cpu_stack);
+        return;
+    }
+
+    cpu->code_len = code_len;
+}
+
+void CPU_destructor(CPU *cpu) {
+    free(cpu->code);
+    free(cpu->cpu_stack);
+
+    cpu->amount_of_cmds = 0;
+    cpu->code_len       = 0;
+    cpu->ass_version    = 0;
+    cpu->ip             = 0;
 }
