@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "processor.h"
 #include "..\Common\file_reading.h"
@@ -52,12 +53,17 @@ void calculate(CPU *cpu) {
     }
 }
 
-void CPU_constructor(CPU *cpu, size_t code_len) {
+void real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, const char* file) {
+    cpu->cpu_stack = nullptr;
+    cpu->logs      = nullptr;
+    cpu->code      = nullptr;
+
     cpu->cpu_stack = (Stack*) calloc(1, sizeof(Stack));
     if (cpu->cpu_stack == nullptr) {
         printf("error: not enought memory for stack in CPU constructor\n");
         free(cpu->code);
         free(cpu->cpu_stack);
+        free(cpu->logs);
         return;
     }
 
@@ -68,8 +74,22 @@ void CPU_constructor(CPU *cpu, size_t code_len) {
         printf("error: not enougth memory for code in CPU constructor\n");
         free(cpu->code);
         free(cpu->cpu_stack);
+        free(cpu->logs);
         return;
     }
+
+    cpu->logs = (CPU_logs*) calloc(1, sizeof(CPU_logs));
+    if (cpu->logs == nullptr) {
+        printf("error: not enougth memory for logs in CPU constructor\n");
+        free(cpu->code);
+        free(cpu->cpu_stack);
+        free(cpu->logs);
+        return;
+    }
+
+    cpu->logs->line_of_creation = line;
+    cpu->logs->file_of_creation = file;
+    cpu->logs->func_of_creation = func;
 
     cpu->code_len = code_len;
 }
