@@ -5,7 +5,7 @@
 #include "..\Common\utils.h"
 #include "..\Stack\stack.h"
 
-#define PROC_VER 1
+#define PROC_VER 2
 #define REG_AMOUNT 5
 #define RAM_SIZE 100
 

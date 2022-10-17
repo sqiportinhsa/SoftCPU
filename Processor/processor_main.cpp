@@ -8,14 +8,14 @@
 int main() {
     FILE *logfile = fopen("logfile.txt", "w");
     SetLogStream(logfile);
-    
+
     CPU cpu = {};
 
-    size_t code_len = count_elements_in_file("assembled.txt");
+    size_t code_len = count_elements_in_file("assembled.bin");
 
     CPU_constructor(&cpu, code_len);
 
-    cpu.code_len = read_file(cpu.code, cpu.code_len, "assembled.txt");
+    cpu.code_len = read_file(cpu.code, cpu.code_len, "assembled.bin");
 
     cpu.ip += get_val(&(cpu.code[cpu.ip]), &cpu.ass_version);
     ++cpu.ip;
