@@ -5,6 +5,7 @@
 #include "..\Common\file_reading.h"
 
 int main() {
+    FILE *logfile = fopen("logfile.txt", "w");
     CPU cpu = {};
 
     size_t code_len = count_elements_in_file("assembled.txt");
@@ -31,7 +32,13 @@ int main() {
 
     calculate(&cpu);
 
+    dump_cpu(&cpu, logfile);
+
     CPU_destructor(&cpu);
+
+    dump_cpu(&cpu, logfile);
+
+    fclose(logfile);
 
     return 0;
 }

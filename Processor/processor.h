@@ -30,8 +30,11 @@ typedef struct {
 #define CPU_constructor(cpu, code_len) real_CPU_constructor(cpu, code_len, __LINE__,     \
                                                             __PRETTY_FUNCTION__, __FILE__)
 
+#define dump_cpu(cpu, logfile) real_dump_cpu(cpu, logfile, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+
 void calculate(CPU *cpu);
 void real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, const char* file);
 void CPU_destructor(CPU *cpu);
+void real_dump_cpu(CPU *cpu, FILE *logfile, const char *file, const char *func, int line);
 
 #endif

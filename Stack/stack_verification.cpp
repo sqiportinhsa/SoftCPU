@@ -2,13 +2,15 @@
 #include "stack_logs.h"
 
 int RealStackVerificator(Stack *stk, const char *file, const char *func, int line) {
+    FILE *logfile = GetLogStream();
+
     int errors = NO_ERROR;
 
     if (stk == nullptr) {
         errors |= STCK_PTR_CRASHED;
 
         if (errors != 0) {
-            RealDumpLogs(stk,file, func, line, errors);
+            RealDumpLogs(stk, logfile, file, func, line, errors);
         }
 
         return errors;
@@ -104,9 +106,10 @@ int RealStackVerificator(Stack *stk, const char *file, const char *func, int lin
 }
 
 int RealSafeStackVerificator(Stack *stk, const char *file, const char *func, int line) {
+    FILE *logfile = GetLogStream();
     int errors = RealStackVerificator(stk, file, func, line);
     if (errors != 0) {
-        RealDumpLogs(stk,file, func, line, errors);
+        RealDumpLogs(stk, logfile, file, func, line, errors);
     }
     return errors;
 }
