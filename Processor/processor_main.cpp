@@ -3,9 +3,12 @@
 
 #include "processor.h"
 #include "..\Common\file_reading.h"
+#include "..\Stack\stack_logs.h"
 
 int main() {
     FILE *logfile = fopen("logfile.txt", "w");
+    SetLogStream(logfile);
+    
     CPU cpu = {};
 
     size_t code_len = count_elements_in_file("assembled.txt");

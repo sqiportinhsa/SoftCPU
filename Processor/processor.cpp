@@ -93,6 +93,10 @@ void CPU_destructor(CPU *cpu) {
     free(cpu->cpu_stack);
     free(cpu->logs);
 
+    cpu->code       = nullptr;
+    cpu->cpu_stack  = nullptr;
+    cpu->logs       = nullptr;
+
     cpu->amount_of_cmds = 0;
     cpu->code_len       = 0;
     cpu->ass_version    = 0;
