@@ -8,7 +8,7 @@
 void assemble(Command* commands, int amount_of_strings) {
     int ncommand = 0;
 
-    FILE *output = fopen("assembled.txt", "w");
+    FILE *output = fopen("assembled.bin", "wb");
 
     fprintf(output, "%d %d ", ASS_VER, amount_of_strings);
 
