@@ -43,3 +43,14 @@ int get_val(char *ptr_to_first_elem, int *ptr_to_val) {
 
     return val_len;
 }
+
+void skip_spaces(char **pointer) {
+    for (; **pointer == ' '; ++(*pointer));
+}
+
+int skip_spaces(char *pointer) {
+    int i = 0;
+    for (; *(pointer + i) == ' '; ++i);
+
+    return i;
+}
