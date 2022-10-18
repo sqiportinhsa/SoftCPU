@@ -15,4 +15,10 @@ typedef enum {
     NOT_A_CMD =  9,
 } Commands;
 
+typedef enum {
+    VAL = 1 << 4,
+    REG = 1 << 5,
+    RAM = 1 << 6,
+} Arg_bytes;
+
 #endif
