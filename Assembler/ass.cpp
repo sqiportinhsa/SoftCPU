@@ -15,19 +15,19 @@ void assemble(Command* commands, int amount_of_strings) {
     FILE *output = fopen("assembled.bin", "wb");
 
     if (output == nullptr) {
-        printf("error: can't open file for output");
+        fprintf(stderr, "error: can't open file for output");
         return;
     }
 
     fprintf(output, "%d%d", ASS_VER, amount_of_strings);
 
     while (ncommand < amount_of_strings) {
-        //printf("start %d\n", ncommand);
+        //fprintf(stderr,"start %d\n", ncommand);
         do_command(output, &commands[ncommand]);
-        //printf("done  %d\n", ncommand);
+        //fprintf(stderr,"done  %d\n", ncommand);
         ++ncommand;
     }
-    //printf("all done");
+    //fprintf(stderr,"all done");
     fclose(output);
 }
 
@@ -39,9 +39,13 @@ void do_command(FILE *output, Command *command) {
     memcpy(cmd, command->cmd_ptr, len);
     cmd[len] = '\0';
 
+    command->cmd = 0;
+    command->val = 0;
+    command->reg = 0;
+
     if (stricmp("PUSH", cmd) == 0) {
         if (command->val_ptr == nullptr) {
-            printf("incorrect push: value expected\n");
+            fprintf(stderr, "incorrect push: value expected\n");
             return;
         }
 
@@ -56,46 +60,49 @@ void do_command(FILE *output, Command *command) {
             get_args_with_first_reg(command, &shift);
 
             if (shift == 0) {
-                printf("incorrect push: argument in [] expected\n");
+                fprintf(stderr, "incorrect push: argument in [] expected\n");
             }
             
             if (*(command->val_ptr + shift) != ']') {
-                printf("incorrect push argument: ] expected\n");
+                fprintf(stderr, "incorrect push argument: ] expected\n");
                 return;
             }
         } else {
-            printf("incorrect push argument\n");
+            fprintf(stderr, "incorrect push argument\n");
             return;
         }
 
-        fprintf(output, "%c", command->cmd);
-        if (command->cmd & VAL) {
-            fprintf(output, "%d", command->val);
-        }
-        if (command->cmd & REG) {
-            fprintf(output, "%c", command->reg);
-        }
-
     } else if (stricmp("ADD", cmd) == 0) {
-        fprintf(output, "%d", ADD_CMD);
+        command->cmd = ADD_CMD;
 
     } else if (stricmp("SUB", cmd) == 0) {
-        fprintf(output, "%d", SUB_CMD);
+        command->cmd = SUB_CMD;
 
     } else if (stricmp("MUL", cmd) == 0) {
-        fprintf(output, "%d", MUL_CMD);
+        command->cmd = MUL_CMD;
 
     } else if (stricmp("DIV", cmd) == 0) {
-        fprintf(output, "%d", DIV_CMD);
+        command->cmd = DIV_CMD;
 
     } else if (stricmp("OUT", cmd) == 0) {
-        fprintf(output, "%d", OUT_CMD);
+        command->cmd = OUT_CMD;
 
     } else if (stricmp("HLT", cmd) == 0) {
-        fprintf(output, "%d",   HLT_CMD);
+        command->cmd = HLT_CMD;
 
     } else {
-        printf("invalid command\n");
+        fprintf(stderr, "invalid command\n");
+        return;
+    }
+
+    fwrite(&command->cmd, sizeof(char), 1, output);
+
+    if (command->cmd & VAL) {
+        fwrite(&command->val, sizeof(int), 1, output);
+    }
+
+    if (command->cmd & REG) {
+        fwrite(&command->reg, sizeof(char), 1, output);
     }
 }
 
@@ -111,12 +118,12 @@ void place_pointers(Command commands[], char *text, size_t amount_of_symbols,
 
     while (nstring < amount_of_strings && nsym < amount_of_symbols) {
         int cmd_len = 0;
-        //printf("start\n");
+        //fprintf(stderr, "start\n");
 
         nsym += skip_spaces(text + nsym);
 
         commands[nstring].cmd_ptr = &(text[nsym]);
-        //printf("number of command %d first sym: %lld. First symbol: %c\n", nstring, nsym, text[nsym]);
+        //fprintf(stderr, "number of command %d first sym: %lld. First symbol: %c\n", nstring, nsym, text[nsym]);
 
         for (; isalpha(text[nsym]); ++nsym, ++cmd_len);
 
@@ -128,12 +135,12 @@ void place_pointers(Command commands[], char *text, size_t amount_of_symbols,
             commands[nstring].val_ptr = nullptr;
             ++nsym;
             ++nstring;
-            //printf("there is no value for this command.\n");
+            //fprintf(stderr, "there is no value for this command.\n");
             continue;
         }
 
         commands[nstring].val_ptr = &(text[nsym]);
-        //printf("number of value's position: %lld\n", nsym);
+        //fprintf(stderr, "number of value's position: %lld\n", nsym);
 
         for (; text[nsym] != '\n'; ++nsym);
 
@@ -159,7 +166,7 @@ Register get_reg_num(char *ptr) {
 void get_args_with_first_reg(Command *command, int *shift) {
     command->reg = get_reg_num(command->val_ptr);
     if (command->reg == -1) {
-        printf("incorrect push arguments: invalid register");
+        fprintf(stderr, "incorrect push arguments: invalid register\n");
         return;
     }
 
@@ -168,12 +175,19 @@ void get_args_with_first_reg(Command *command, int *shift) {
     *shift += 3;
     *shift += skip_spaces(command->val_ptr + *shift);
 
-    if (*(command->val_ptr + *shift) > '0' && *(command->val_ptr + *shift) <= '9') {
-        *shift += get_val(command->val_ptr + *shift, &command->val);
-        command->cmd |= REG;
+    if (*(command->val_ptr + *shift) == '+') {
+        ++(*shift);
+        *shift += skip_spaces(command->val_ptr + *shift);
 
-    } else {
-        printf("incorrect push arguments: invalid register after value");
+        if (*(command->val_ptr + *shift) > '0' && *(command->val_ptr + *shift) <= '9') {
+            *shift += get_val(command->val_ptr + *shift, &command->val);
+            command->cmd |= REG;
+
+        } else {
+            fprintf(stderr, "incorrect push arguments: invalid register after value\n");
+            return;
+        }
+    } else if (*(command->val_ptr + *shift) != '\n' && *(command->val_ptr + *shift) != ';') {
         return;
     }
 }
@@ -185,10 +199,19 @@ void get_args_with_first_val(Command *command, int *shift) {
 
         command->cmd |= VAL;
 
-        if (*(command->val_ptr + *shift) != '\n') {
+        if (*(command->val_ptr + *shift) != '\n' && *(command->val_ptr + *shift) != ';') {
+            fprintf(stderr, "%c", *(command->val_ptr + *shift));
+            if (*(command->val_ptr + *shift) != '+') {
+                fprintf(stderr, "incorrect push arguments: unexpected sybol after value\n");
+                return;
+            }
+
+            ++(*shift);
+            *shift += skip_spaces(command->val_ptr + *shift);
+
             command->reg = get_reg_num(command->val_ptr + *shift);
             if (command->reg == -1) {
-                printf("incorrect push arguments: invalid register after value");
+                fprintf(stderr, "incorrect push arguments: invalid register after value\n");
                 return;
             }
 

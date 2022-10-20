@@ -13,7 +13,7 @@ int main() {
     char* text = (char*) calloc(amount_of_elements, sizeof(char));
 
     if (text == nullptr) {
-        printf("memory limit exceed");
+        fprintf(stderr, "memory limit exceed");
         return -1;
     }
 
