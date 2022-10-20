@@ -19,7 +19,9 @@ void assemble(Command* commands, int amount_of_strings) {
         return;
     }
 
-    fprintf(output, "%d%d", ASS_VER, amount_of_strings);
+    fwrite(&verification_const, sizeof(int), 1, output);
+    fwrite(&ASS_VER,            sizeof(int), 1, output);
+    fwrite(&amount_of_strings,  sizeof(int), 1, output);
 
     while (ncommand < amount_of_strings) {
         //fprintf(stderr,"start %d\n", ncommand);

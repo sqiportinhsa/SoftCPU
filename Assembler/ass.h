@@ -5,7 +5,8 @@
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"
 
-#define ASS_VER 2
+const int ASS_VER = 2;
+const int verification_const = 0xDEED;
 
 typedef struct {
     char* cmd_ptr;
