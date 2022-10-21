@@ -26,6 +26,7 @@ typedef struct {
     int       verification_const    = 0;
     int       registers[Reg_amount] = {};
     int       ram[RAM_size]         = {};
+    int       stk_err               = NO_ERROR;
 } CPU;
 
 typedef enum {

@@ -10,7 +10,6 @@
 int calculate(CPU *cpu) {
     int n_command = 0;
     int cpu_err   = NO_CPU_ERR;
-    int stk_err   = NO_ERROR;
 
     while (n_command < cpu->amount_of_cmds && cpu->ip < cpu->code_len) {
         int cmd = *((char*) (cpu->code + cpu->ip));
@@ -46,23 +45,23 @@ int calculate(CPU *cpu) {
                 if (cmd & RAM) {
                     val_for_push  = cpu->ram[val_for_push];
                 }
-                stk_err |= StackPush(cpu->cpu_stack, val_for_push);
+                cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
                 break;
             case ADD_CMD:
-                stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
-                                                   + StackPop(cpu->cpu_stack));
+                cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
+                                                             + StackPop(cpu->cpu_stack));
                 break;
             case SUB_CMD:
-                first_popped = StackPop(cpu->cpu_stack, &stk_err);
-                stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped);
+                first_popped  = StackPop(cpu->cpu_stack, &cpu->stk_err);
+                cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped);
                 break;
             case MUL_CMD:
-                stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
+                cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
                                                    * StackPop(cpu->cpu_stack));
                 break;
             case DIV_CMD:
-                first_popped = StackPop(cpu->cpu_stack, &stk_err);
-                stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
+                first_popped  = StackPop(cpu->cpu_stack, &cpu->stk_err);
+                cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
                 break;
             case OUT_CMD:
                 printf("result: %d", StackPop(cpu->cpu_stack));
@@ -73,7 +72,7 @@ int calculate(CPU *cpu) {
                 break;
         }
 
-        if (stk_err != 0) {
+        if (cpu->stk_err != 0) {
             cpu_err |= STACK_ERR;
         }
 
