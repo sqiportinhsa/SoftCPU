@@ -17,29 +17,32 @@ int main() {
 
     cpu.code_len = read_file(cpu.code, cpu.code_len, "assembled.bin");
 
-    cpu.ip += get_val(&(cpu.code[cpu.ip]), &cpu.ass_version);
-    ++cpu.ip;
+    cpu.verification_const = *((int*) (cpu.code + cpu.ip));
+    cpu.ip += sizeof(int);
+    
+    if (cpu.verification_const != Verification_const) {
+        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match.\n");
+        return -1;
+    }
 
-    //printf("%d ", cpu.ip);
+    cpu.ass_version = *((int*) (cpu.code + cpu.ip));
+    cpu.ip += sizeof(int);
 
-    cpu.ip += get_val(&(cpu.code[cpu.ip]), &cpu.amount_of_cmds);
-    ++cpu.ip;
+    if (cpu.ass_version > Proc_version) {
+        fprintf(stderr, "Error: processor version is less than assembler version\n");
+        return -1;
+    }
 
-    //printf("%d\n", cpu.ip);
+    cpu.amount_of_cmds = *((int*) (cpu.code + cpu.ip));
+    cpu.ip += sizeof(int);
 
     //printf("%d %d\n", cpu.ass_version, cpu.amount_of_cmds);
 
     /*for(size_t i = 0; i < cpu.code_len; ++i) {
-        printf("<%c>", cpu.code[i]);
+        fprintf(stderr, "<%d>", cpu.code[i]);
     }*/
 
     calculate(&cpu);
-
-    dump_cpu(&cpu, logfile);
-
-    CPU_destructor(&cpu);
-
-    dump_cpu(&cpu, logfile);
 
     fclose(logfile);
 

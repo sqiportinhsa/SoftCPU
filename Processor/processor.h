@@ -5,9 +5,9 @@
 #include "..\Common\utils.h"
 #include "..\Stack\stack.h"
 
-#define PROC_VER 2
-#define REG_AMOUNT 5
-#define RAM_SIZE 100
+const int Proc_version   = 3;
+const int Reg_amount     = 5;
+const int RAM_size       = 100;
 
 typedef struct {
     const char* file_of_creation;
@@ -23,8 +23,9 @@ typedef struct {
     size_t    code_len              = 0;
     int       amount_of_cmds        = 0;
     int       ass_version           = 0;
-    int       registers[REG_AMOUNT] = {};
-    int       ram[RAM_SIZE]         = {};
+    int       verification_const    = 0;
+    int       registers[Reg_amount] = {};
+    int       ram[RAM_size]         = {};
 } CPU;
 
 #define CPU_constructor(cpu, code_len) real_CPU_constructor(cpu, code_len, __LINE__,     \

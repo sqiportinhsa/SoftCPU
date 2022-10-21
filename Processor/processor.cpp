@@ -11,36 +11,54 @@ void calculate(CPU *cpu) {
     int n_command = 0;
 
     while (n_command < cpu->amount_of_cmds && cpu->ip < cpu->code_len) {
-        int cmd = 0;
-        cpu->ip += get_val(&(cpu->code[cpu->ip]), &cmd);
-        ++cpu->ip;
+        int cmd = *((char*) (cpu->code + cpu->ip));
+        cpu->ip += sizeof(char);
 
         if (cmd == HLT_CMD) {
             break;
         }
 
-        int first_popped = 0;
-        int cmd_val      = 0;
+        int  first_popped = 0;
+        int  val_for_push = 0;
+        int  cmd_val      = 0;
+        char cmd_reg      = 0;
 
-        switch (cmd) {
+        if (cmd & VAL) {
+            cmd_val = *((int*)  (cpu->code + cpu->ip));
+            cpu->ip += sizeof(int);
+        }
+
+        if (cmd & REG) {
+            cmd_reg = *((char*) (cpu->code + cpu->ip));
+            cpu->ip += sizeof(char);
+        }
+
+        switch (cmd & CMD) {
             case PUSH_CMD:
-                cpu->ip += get_val(&(cpu->code[cpu->ip]), &cmd_val);
-                ++cpu->ip;
-                StackPush(cpu->cpu_stack, cmd_val);
+                if (cmd & VAL) {
+                    val_for_push += cmd_val;
+                }
+                if (cmd & REG) {
+                    val_for_push += cpu->registers[(int) cmd_reg];
+                }
+                if (cmd & RAM) {
+                    val_for_push  = cpu->ram[val_for_push];
+                }
+                StackPush(cpu->cpu_stack, val_for_push);
                 break;
             case ADD_CMD:
                 StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) + StackPop(cpu->cpu_stack));
                 break;
             case SUB_CMD:
                 first_popped = StackPop(cpu->cpu_stack);
-                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped  );
+                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped);
                 break;
             case MUL_CMD:
                 StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) * StackPop(cpu->cpu_stack));
                 break;
             case DIV_CMD:
                 first_popped = StackPop(cpu->cpu_stack);
-                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped  );
+                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
                 break;
             case OUT_CMD:
                 printf("result: %d", StackPop(cpu->cpu_stack));
@@ -126,7 +144,7 @@ void real_dump_cpu(CPU *cpu, FILE *logfile, const char *file, const char *func, 
 
     fprintf(logfile, "CPU info:\n");
 
-    fprintf(logfile, "\tCPU version: %d\n", PROC_VER);
+    fprintf(logfile, "\tCPU version: %d\n", Proc_version);
     fprintf(logfile, "\tAss version: %d\n", cpu->ass_version);
     fprintf(logfile, "\tCode info:\n");
     fprintf(logfile, "\t\tCode length in symbols: %zu\n", cpu->code_len);
@@ -136,12 +154,12 @@ void real_dump_cpu(CPU *cpu, FILE *logfile, const char *file, const char *func, 
         fprintf(logfile, "\t\tError: pointer to array with code is null, can't print it\n");
     } else {
         fprintf(logfile, "\t\tCode:\n\t\t{");
-        for (size_t ip = 0; cpu->code[ip] != '\0' && ip < cpu->code_len; ++ip) {
+        for (size_t ip = 0; ip < cpu->code_len; ++ip) {
             fprintf(logfile, "%c", cpu->code[ip]);
         }
         fprintf(logfile, "}\n");
         fprintf(logfile, "\t\t~");
-        for (size_t ip = 0; cpu->code[ip] != '\0' && ip < cpu->code_len && ip < cpu->ip; ++ip) {
+        for (size_t ip = 0; ip < cpu->code_len && ip < cpu->ip; ++ip) {
             fprintf(logfile, "~");
         }
         fprintf(logfile, "^ ip = %zu\n", cpu->ip);
@@ -151,7 +169,7 @@ void real_dump_cpu(CPU *cpu, FILE *logfile, const char *file, const char *func, 
         fprintf(logfile, "\t\tError: null pointer to cpu stack, can't print stack info\n");
     } else {
         fprintf(logfile, "\t\tStack info:\n\n");
-        DumpLogs(cpu->cpu_stack, logfile);
+        RealDumpLogs(cpu->cpu_stack, logfile, file, func, line, StackVerificator(cpu->cpu_stack));
     }
 
     fflush(logfile);
