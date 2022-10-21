@@ -19,25 +19,24 @@ void assemble(Command* commands, int amount_of_strings) {
         return;
     }
 
-    fwrite(&verification_const, sizeof(int), 1, output);
-    fwrite(&ASS_VER,            sizeof(int), 1, output);
+    fwrite(&Verification_const, sizeof(int), 1, output);
+    fwrite(&Ass_version,            sizeof(int), 1, output);
     fwrite(&amount_of_strings,  sizeof(int), 1, output);
 
     while (ncommand < amount_of_strings) {
-        //fprintf(stderr,"start %d\n", ncommand);
+        ASS_DEBUG("start %d\n", ncommand);
         do_command(output, &commands[ncommand]);
-        //fprintf(stderr,"done  %d\n", ncommand);
+        ASS_DEBUG("done  %d\n", ncommand);
         ++ncommand;
     }
-    //fprintf(stderr,"all done");
+    ASS_DEBUG("all done");
     fclose(output);
 }
 
 void do_command(FILE *output, Command *command) {
-
     int len = command->cmd_len;
 
-    char cmd[5] = {};
+    char cmd[Max_cmd_len] = {};
     memcpy(cmd, command->cmd_ptr, len);
     cmd[len] = '\0';
 
@@ -106,6 +105,9 @@ void do_command(FILE *output, Command *command) {
     if (command->cmd & REG) {
         fwrite(&command->reg, sizeof(char), 1, output);
     }
+
+    fflush(output);
+    fflush(stderr);
 }
 
 void place_pointers(Command commands[], char *text, size_t amount_of_symbols, 
@@ -120,12 +122,12 @@ void place_pointers(Command commands[], char *text, size_t amount_of_symbols,
 
     while (nstring < amount_of_strings && nsym < amount_of_symbols) {
         int cmd_len = 0;
-        //fprintf(stderr, "start\n");
+        ASS_DEBUG("start\n");
 
         nsym += skip_spaces(text + nsym);
 
         commands[nstring].cmd_ptr = &(text[nsym]);
-        //fprintf(stderr, "number of command %d first sym: %lld. First symbol: %c\n", nstring, nsym, text[nsym]);
+        ASS_DEBUG("number of command %d first sym: %lld. First symbol: %c\n", nstring, nsym, text[nsym]);
 
         for (; isalpha(text[nsym]); ++nsym, ++cmd_len);
 
@@ -133,16 +135,16 @@ void place_pointers(Command commands[], char *text, size_t amount_of_symbols,
 
         for (; text[nsym] == ' '; ++nsym);
 
-        if (text[nsym] == '\n') {
+        if (text[nsym] == '\n' || text[nsym] == '\0') {
             commands[nstring].val_ptr = nullptr;
             ++nsym;
             ++nstring;
-            //fprintf(stderr, "there is no value for this command.\n");
+            ASS_DEBUG("there is no value for this command.\n");
             continue;
         }
 
         commands[nstring].val_ptr = &(text[nsym]);
-        //fprintf(stderr, "number of value's position: %lld\n", nsym);
+        ASS_DEBUG("number of value's position: %lld\n", nsym);
 
         for (; text[nsym] != '\n'; ++nsym);
 
