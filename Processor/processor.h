@@ -35,6 +35,7 @@ typedef enum {
     MEMORY_EXC  = 1 << 1,
     STACK_ERR   = 1 << 2,
     UNDEF_CMD   = 1 << 3,
+    INCORR_POP   = 1 << 4,
 } CPU_errors;
 
 #define CPU_constructor(cpu, code_len) real_CPU_constructor(cpu, code_len, __LINE__,     \

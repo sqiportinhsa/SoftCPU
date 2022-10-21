@@ -12,6 +12,8 @@ int calculate(CPU *cpu) {
     int cpu_err   = NO_CPU_ERR;
 
     while (n_command < cpu->amount_of_cmds && cpu->ip < cpu->code_len) {
+        dump_cpu(cpu, GetLogStream());
+        
         int cmd = *((char*) (cpu->code + cpu->ip));
         cpu->ip += sizeof(char);
 
@@ -64,7 +66,17 @@ int calculate(CPU *cpu) {
                 cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
                 break;
             case OUT_CMD:
-                printf("result: %d", StackPop(cpu->cpu_stack));
+                printf("result: %d", StackPop(cpu->cpu_stack, &cpu->stk_err));
+                break;
+            case POP_CMD:
+                if (cmd & REG) {
+                    cpu->registers[(int) cmd_reg] = StackPop(cpu->cpu_stack, &cpu->stk_err);
+                } else if (cmd & RAM) {
+                    cpu->ram[(int) cmd_val]       = StackPop(cpu->cpu_stack, &cpu->stk_err);
+                } else {
+                    cpu_err |= INCORR_POP;
+                    return cpu_err;
+                }
                 break;
             default:
                 fprintf(stderr, "Error: undefined command\n");
