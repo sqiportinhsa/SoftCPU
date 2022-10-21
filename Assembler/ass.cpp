@@ -68,6 +68,8 @@ int do_command(FILE *output, Command *command) {
         } else if (*command->val_ptr == 'r') {
             errors |= get_args_with_first_reg(command, &shift);
         } else if (*command->val_ptr == '[') {
+            ++shift;
+
             errors |= get_args_with_first_val(command, &shift);
             errors |= get_args_with_first_reg(command, &shift);
 
@@ -82,6 +84,8 @@ int do_command(FILE *output, Command *command) {
                 errors |= INCR_BR_USAGE;
                 return errors;
             }
+
+            command->cmd |= RAM;
         } else {
             fprintf(stderr, "incorrect push argument\n");
             errors |= INCORRECT_ARG;
@@ -189,36 +193,41 @@ Register get_reg_num(char *ptr) {
 int get_args_with_first_reg(Command *command, int *shift) {
     int errors = NO_ASS_ERR;
 
-    command->reg = get_reg_num(command->val_ptr);
-    if (command->reg == -1) {
-        fprintf(stderr, "incorrect push arguments: invalid register\n");
-        errors |= INCORRECT_REG;
-        return errors;
-    }
-
-    command->cmd |= REG;
-
-    *shift += 3;
-    *shift += skip_spaces(command->val_ptr + *shift);
-
-    if (*(command->val_ptr + *shift) != '\n' && *(command->val_ptr + *shift) != ';') {
-        if (*(command->val_ptr + *shift) != '+') {
-            fprintf(stderr, "incorrect push arguments: invalid symbol after register\n");
-            errors |= UNIDENTIF_SYM;
+    if (*(command->val_ptr + *shift) == 'r') {
+        command->reg = get_reg_num(command->val_ptr + *shift);
+        if (command->reg == -1) {
+            fprintf(stderr, "incorrect push arguments: invalid register\n");
+            errors |= INCORRECT_REG;
             return errors;
         }
 
-        ++(*shift);
+        command->cmd |= REG;
+
+        *shift += 3;
         *shift += skip_spaces(command->val_ptr + *shift);
 
-        if (*(command->val_ptr + *shift) > '0' && *(command->val_ptr + *shift) <= '9') {
-            *shift += get_val(command->val_ptr + *shift, &command->val);
-            command->cmd |= VAL;
+        if (*(command->val_ptr + *shift) != '\n' && 
+            *(command->val_ptr + *shift) != ';'  &&
+            *(command->val_ptr + *shift) != ']') {
 
-        } else {
-            fprintf(stderr, "incorrect push arguments: expexted value addition\n");
-            errors |= INCORRECT_VAL;
-            return errors;
+            if (*(command->val_ptr + *shift) != '+') {
+                fprintf(stderr, "incorrect push arguments: invalid symbol after register\n");
+                errors |= UNIDENTIF_SYM;
+                return errors;
+            }
+
+            ++(*shift);
+            *shift += skip_spaces(command->val_ptr + *shift);
+
+            if (*(command->val_ptr + *shift) > '0' && *(command->val_ptr + *shift) <= '9') {
+                *shift += get_val(command->val_ptr + *shift, &command->val);
+                command->cmd |= VAL;
+
+            } else {
+                fprintf(stderr, "incorrect push arguments: expexted value addition\n");
+                errors |= INCORRECT_VAL;
+                return errors;
+            }
         }
     }
 
@@ -228,13 +237,16 @@ int get_args_with_first_reg(Command *command, int *shift) {
 int get_args_with_first_val(Command *command, int *shift) {
     int errors = NO_ASS_ERR;
 
-    if (*command->val_ptr <= '9' && *command->val_ptr > '0') {
-        *shift += get_val(command->val_ptr, &command->val);
-        *shift += skip_spaces(command->val_ptr + *shift);
+    if (*(command->val_ptr + *shift) <= '9' && *(command->val_ptr + *shift) > '0') {
+        *shift += get_val(command->val_ptr + *shift, &command->val);
+        *shift += skip_spaces(command->val_ptr + *shift + *shift);
 
         command->cmd |= VAL;
 
-        if (*(command->val_ptr + *shift) != '\n' && *(command->val_ptr + *shift) != ';') {
+        if (*(command->val_ptr + *shift) != '\n' && 
+            *(command->val_ptr + *shift) != ';'  &&
+            *(command->val_ptr + *shift) != ']') {
+
             if (*(command->val_ptr + *shift) != '+') {
                 fprintf(stderr, "incorrect push arguments: unexpected sybol after value\n");
                 errors |= UNIDENTIF_SYM;
