@@ -9,8 +9,6 @@ const int Ass_version = 2;
 const int Verification_const = 0xDEED;
 const int Max_cmd_len = 5;
 
-#define DEBUG_ASS
-
 #ifdef DEBUG_ASS
 #define ASS_DEBUG(format, ...) fprintf(stderr, format, ##__VA_ARGS__)
 #else
@@ -37,18 +35,25 @@ typedef enum {
 } Register;
 
 typedef enum {
-    NO_ASS_ERR = 0,
-    INCORR_CMD = 1 << 1,
-    INCORR_REG = 1 << 2,
-    INCORR_VAL = 1 << 3,
+    NO_ASS_ERR     = 0,
+    INCORRECT_CMD  = 1 << 1,
+    INCORRECT_ARG  = 1 << 2,
+    INCORRECT_REG  = 1 << 3,
+    INCORRECT_VAL  = 1 << 4,
+    UNIDENTIF_SYM  = 1 << 5,
+    UNEXP_NULLPTR  = 1 << 6,
+    INCR_BR_USAGE  = 1 << 7,
+    MISSING_ARG    = 1 << 8,
+    UNEXPEC_ARG    = 1 << 9,
+    CANT_OPEN_FILE = 1 << 10,
 } AssErrors;
 
-void assemble(Command* commands, int amount_of_strings);
-void do_command(FILE *output1, Command *command);
-void place_pointers(Command commands[], char *text, size_t amount_of_symbols, 
+int assemble(Command* commands, int amount_of_strings);
+int do_command(FILE *output1, Command *command);
+int place_pointers(Command commands[], char *text, size_t amount_of_symbols, 
                                                        int amount_of_strings);
 Register get_reg_num(char *ptr);
-void get_args_with_first_reg(Command *command, int *shift);
-void get_args_with_first_val(Command *command, int *shift);
+int get_args_with_first_reg(Command *command, int *shift);
+int get_args_with_first_val(Command *command, int *shift);
 
 #endif

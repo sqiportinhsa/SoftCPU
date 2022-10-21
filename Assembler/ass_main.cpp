@@ -8,6 +8,8 @@
 #include "..\Common\file_reading.h"
 
 int main() {
+    int errors = NO_ASS_ERR;
+
     size_t amount_of_elements = count_elements_in_file("input.txt");
 
     char* text = (char*) calloc(amount_of_elements, sizeof(char));
@@ -27,7 +29,7 @@ int main() {
 
     Command *commands = (Command*) calloc(amount_of_strings, sizeof(Command));
 
-    place_pointers(commands, text, amount_of_elements, amount_of_strings);
+    errors |= place_pointers(commands, text, amount_of_elements, amount_of_strings);
 
     /*for (int i = 0; i < amount_of_strings; ++i) {
         printf("%s: ", commands[i].cmd_ptr);
@@ -36,6 +38,7 @@ int main() {
         }
     }*/
 
-    assemble(commands, amount_of_strings);
+    errors |= assemble(commands, amount_of_strings);
+    
     return 0;
 }
