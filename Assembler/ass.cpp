@@ -213,7 +213,7 @@ int get_args_with_first_reg(Command *command, int *shift) {
 
         if (*(command->val_ptr + *shift) > '0' && *(command->val_ptr + *shift) <= '9') {
             *shift += get_val(command->val_ptr + *shift, &command->val);
-            command->cmd |= REG;
+            command->cmd |= VAL;
 
         } else {
             fprintf(stderr, "incorrect push arguments: expexted value addition\n");
@@ -235,7 +235,6 @@ int get_args_with_first_val(Command *command, int *shift) {
         command->cmd |= VAL;
 
         if (*(command->val_ptr + *shift) != '\n' && *(command->val_ptr + *shift) != ';') {
-            fprintf(stderr, "%c", *(command->val_ptr + *shift));
             if (*(command->val_ptr + *shift) != '+') {
                 fprintf(stderr, "incorrect push arguments: unexpected sybol after value\n");
                 errors |= UNIDENTIF_SYM;
