@@ -5,7 +5,7 @@
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"
 
-const int Ass_version = 2;
+const int Ass_version = 3;
 const int Verification_const = 0xDEED;
 const int Max_cmd_len = 5;
 
