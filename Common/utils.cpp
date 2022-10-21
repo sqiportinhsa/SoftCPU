@@ -1,9 +1,13 @@
 #include <stdio.h>
+#include <cassert>
 
 #include "utils.h"
 #include "file_reading.h"
 
 int get_commands(char *text, Command *commands, size_t amount_of_elems) {
+    assert(text     != nullptr && "text is nullptr");
+    assert(commands != nullptr && "commands is nullptr");
+    
     int n_command = 0;
     size_t n_elem = 0;
 
