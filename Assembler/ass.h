@@ -6,7 +6,6 @@
 #include "..\Stack\stack_verification.h"
 
 const int Ass_version = 3;
-const int Verification_const = 0xDEED;
 const int Max_cmd_len = 5;
 
 #ifdef DEBUG_ASS
