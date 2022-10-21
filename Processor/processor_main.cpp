@@ -9,11 +9,13 @@ int main() {
     FILE *logfile = fopen("logfile.txt", "w");
     SetLogStream(logfile);
 
+    int errors = NO_CPU_ERR;
+
     CPU cpu = {};
 
     size_t code_len = count_elements_in_file("assembled.bin");
 
-    CPU_constructor(&cpu, code_len);
+    errors |= CPU_constructor(&cpu, code_len);
 
     cpu.code_len = read_file(cpu.code, cpu.code_len, "assembled.bin");
 
@@ -42,7 +44,7 @@ int main() {
         fprintf(stderr, "<%d>", cpu.code[i]);
     }*/
 
-    calculate(&cpu);
+    errors |= calculate(&cpu);
 
     fclose(logfile);
 

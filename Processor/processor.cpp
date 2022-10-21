@@ -7,8 +7,10 @@
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"
 
-void calculate(CPU *cpu) {
+int calculate(CPU *cpu) {
     int n_command = 0;
+    int cpu_err   = NO_CPU_ERR;
+    int stk_err   = NO_ERROR;
 
     while (n_command < cpu->amount_of_cmds && cpu->ip < cpu->code_len) {
         int cmd = *((char*) (cpu->code + cpu->ip));
@@ -44,59 +46,73 @@ void calculate(CPU *cpu) {
                 if (cmd & RAM) {
                     val_for_push  = cpu->ram[val_for_push];
                 }
-                StackPush(cpu->cpu_stack, val_for_push);
+                stk_err |= StackPush(cpu->cpu_stack, val_for_push);
                 break;
             case ADD_CMD:
-                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) + StackPop(cpu->cpu_stack));
+                stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
+                                                   + StackPop(cpu->cpu_stack));
                 break;
             case SUB_CMD:
-                first_popped = StackPop(cpu->cpu_stack);
-                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped);
+                first_popped = StackPop(cpu->cpu_stack, &stk_err);
+                stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped);
                 break;
             case MUL_CMD:
-                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) * StackPop(cpu->cpu_stack));
+                stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
+                                                   * StackPop(cpu->cpu_stack));
                 break;
             case DIV_CMD:
-                first_popped = StackPop(cpu->cpu_stack);
-                StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
+                first_popped = StackPop(cpu->cpu_stack, &stk_err);
+                stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
                 break;
             case OUT_CMD:
                 printf("result: %d", StackPop(cpu->cpu_stack));
                 break;
             default:
+                fprintf(stderr, "Error: undefined command\n");
+                cpu_err |= UNDEF_CMD;
                 break;
+        }
+
+        if (stk_err != 0) {
+            cpu_err |= STACK_ERR;
         }
 
         ++n_command;
     }
+
+    return cpu_err;
 }
 
-void real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, const char* file) {
+int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, const char* file) {
+    if (cpu == nullptr) {
+        return NULLPTR_ERR;
+    }
+
     cpu->cpu_stack = nullptr;
     cpu->logs      = nullptr;
     cpu->code      = nullptr;
 
     cpu->cpu_stack = (Stack*) calloc(1, sizeof(Stack));
     if (cpu->cpu_stack == nullptr) {
-        printf("error: not enought memory for stack in CPU constructor\n");
+        fprintf(stderr, "error: not enought memory for stack in CPU constructor\n");
         CPU_destructor(cpu);
-        return;
+        return MEMORY_EXC;
     }
 
     StackCtr(cpu->cpu_stack, 0);
 
     cpu->code = (char*) calloc(code_len, sizeof(char));
     if (cpu->code == nullptr) {
-        printf("error: not enougth memory for code in CPU constructor\n");
+        fprintf(stderr, "error: not enougth memory for code in CPU constructor\n");
         CPU_destructor(cpu);
-        return;
+        return MEMORY_EXC;
     }
 
     cpu->logs = (CPU_logs*) calloc(1, sizeof(CPU_logs));
     if (cpu->logs == nullptr) {
-        printf("error: not enougth memory for logs in CPU constructor\n");
+        fprintf(stderr, "error: not enougth memory for logs in CPU constructor\n");
         CPU_destructor(cpu);
-        return;
+        return MEMORY_EXC;
     }
 
     cpu->logs->line_of_creation = line;
@@ -104,9 +120,15 @@ void real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func,
     cpu->logs->func_of_creation = func;
 
     cpu->code_len = code_len;
+
+    return NO_CPU_ERR;
 }
 
-void CPU_destructor(CPU *cpu) {
+int CPU_destructor(CPU *cpu) {
+    if (cpu == nullptr) {
+        return NULLPTR_ERR;
+    }
+
     free(cpu->code);
     free(cpu->cpu_stack);
     free(cpu->logs);
@@ -119,6 +141,8 @@ void CPU_destructor(CPU *cpu) {
     cpu->code_len       = 0;
     cpu->ass_version    = 0;
     cpu->ip             = 0;
+
+    return NO_CPU_ERR;
 }
 
 void real_dump_cpu(CPU *cpu, FILE *logfile, const char *file, const char *func, int line) {

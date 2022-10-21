@@ -28,14 +28,22 @@ typedef struct {
     int       ram[RAM_size]         = {};
 } CPU;
 
+typedef enum {
+    NO_CPU_ERR  = 0,
+    NULLPTR_ERR = 1 << 0,
+    MEMORY_EXC  = 1 << 1,
+    STACK_ERR   = 1 << 2,
+    UNDEF_CMD   = 1 << 3,
+} CPU_errors;
+
 #define CPU_constructor(cpu, code_len) real_CPU_constructor(cpu, code_len, __LINE__,     \
                                                             __PRETTY_FUNCTION__, __FILE__)
 
 #define dump_cpu(cpu, logfile) real_dump_cpu(cpu, logfile, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
-void calculate(CPU *cpu);
-void real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, const char* file);
-void CPU_destructor(CPU *cpu);
+int calculate(CPU *cpu);
+int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, const char* file);
+int CPU_destructor(CPU *cpu);
 void real_dump_cpu(CPU *cpu, FILE *logfile, const char *file, const char *func, int line);
 
 #endif
