@@ -49,18 +49,18 @@ int calculate(CPU *cpu) {
                 break;
             case ADD_CMD:
                 cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
-                                                             + StackPop(cpu->cpu_stack));
+                                                        + StackPop(cpu->cpu_stack));
                 break;
             case SUB_CMD:
-                first_popped  = StackPop(cpu->cpu_stack, &cpu->stk_err);
+                first_popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
                 cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped);
                 break;
             case MUL_CMD:
                 cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
-                                                   * StackPop(cpu->cpu_stack));
+                                                        * StackPop(cpu->cpu_stack));
                 break;
             case DIV_CMD:
-                first_popped  = StackPop(cpu->cpu_stack, &cpu->stk_err);
+                first_popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
                 cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
                 break;
             case OUT_CMD:
