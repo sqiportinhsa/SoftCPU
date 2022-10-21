@@ -56,6 +56,8 @@ int do_command(FILE *output, Command *command) {
     command->reg = 0;
 
     if (stricmp("PUSH", cmd) == 0) {
+        command->cmd = PUSH_CMD;
+        
         if (command->val_ptr == nullptr) {
             fprintf(stderr, "incorrect push: value expected\n");
             return MISSING_ARG;
