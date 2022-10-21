@@ -12,8 +12,6 @@ int calculate(CPU *cpu) {
     int cpu_err   = NO_CPU_ERR;
 
     while (n_command < cpu->amount_of_cmds && cpu->ip < cpu->code_len) {
-        dump_cpu(cpu, GetLogStream());
-        
         int cmd = *((char*) (cpu->code + cpu->ip));
         cpu->ip += sizeof(char);
 
