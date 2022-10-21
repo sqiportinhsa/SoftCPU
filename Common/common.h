@@ -12,9 +12,10 @@ typedef enum {
     SUB_CMD   =  4,
     DIV_CMD   =  5,
     OUT_CMD   =  6,
-    IN_CMD    =  7,
-    MAX_CMD   =  8,
-    NOT_A_CMD =  9,
+    POP_CMD   =  7,
+    IN_CMD    =  8,
+    MAX_CMD   =  9,
+    NOT_A_CMD =  10,
 } Commands;
 
 typedef enum {
