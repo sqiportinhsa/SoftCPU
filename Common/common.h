@@ -1,6 +1,8 @@
 #ifndef COMMON
 #define COMMON
 
+const int Verification_const = 0xDEED;
+
 typedef enum {
     MIN_CMD   = -1,
     HLT_CMD   =  0,
@@ -16,6 +18,7 @@ typedef enum {
 } Commands;
 
 typedef enum {
+    CMD = 1 | (1 << 1) | (1 << 2) | (1 << 3),
     VAL = 1 << 4,
     REG = 1 << 5,
     RAM = 1 << 6,
