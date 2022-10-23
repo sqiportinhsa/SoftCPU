@@ -6,27 +6,32 @@
 #include "..\Common\common.h"
 
 int main() {
-    size_t amount_of_elements = count_elements_in_file("assembled.txt");
+    size_t code_len = count_elements_in_file("assembled.bin");
 
-    char* text = (char*) calloc(amount_of_elements, sizeof(char));
-    if (text == nullptr) {
-        printf("memory limit exceed");
+    Disasm disasm = {};
+
+    disasm_constructor(&disasm, code_len);
+
+    disasm.code_len = read_file(disasm.code, disasm.code_len, "assembled.bin");
+
+    disasm.verification_const = *((int*) (disasm.code + disasm.ip));
+    disasm.ip += sizeof(int);
+    
+    if (disasm.verification_const != Verification_const) {
+        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match.\n");
         return -1;
     }
 
-    amount_of_elements = read_file(text, amount_of_elements, "assembled.txt");
+    disasm.ass_version = *((int*) (disasm.code + disasm.ip));
+    disasm.ip += sizeof(int);
 
-    int ip = 0;
-    int ass_ver = 0;
-    int amount_of_commands = 0;
+    if (disasm.ass_version > Disasm_version) {
+        fprintf(stderr, "Error: processor version is less than assembler version\n");
+        return -1;
+    }
 
-    ip += get_val(&(text[ip]), &ass_ver);
-    ++ip;
-
-    //printf("%d ", ip);
-
-    ip += get_val(&(text[ip]), &amount_of_commands);
-    ++ip;
+    disasm.amount_of_cmds = *((int*) (disasm.code + disasm.ip));
+    disasm.ip += sizeof(int);
 
     //printf("%d\n", ip);
 
@@ -36,9 +41,7 @@ int main() {
         printf("<%c>", text[i]);
     }*/
 
-    disassemble(&(text[ip]), amount_of_commands, amount_of_elements);
-
-    free(text);
+    disassemble(&disasm);
 
     return 0;
 }
