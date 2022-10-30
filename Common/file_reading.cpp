@@ -58,11 +58,26 @@ void skip_spaces(char **pointer) {
     for (; **pointer == ' '; ++(*pointer));
 }
 
-int skip_spaces(char *pointer) {
+size_t skip_spaces(char *pointer) {
     assert(pointer != nullptr && "pointer in nullptr");
 
-    int i = 0;
+    size_t i = 0;
     for (; *(pointer + i) == ' '; ++i);
+
+    return i;
+}
+
+void skip_to_newline(char **pointer) {
+    assert(pointer != nullptr && "pointer is nullptr");
+
+    for (; **pointer != '\n'; ++(*pointer));
+}
+
+size_t skip_to_newline(char *pointer) {
+    assert(pointer != nullptr && "pointer is nullptr");
+
+    size_t i = 0;
+    for (; *(pointer + 1) != '\n'; ++i);
 
     return i;
 }
