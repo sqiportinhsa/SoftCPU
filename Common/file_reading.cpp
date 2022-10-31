@@ -77,7 +77,7 @@ size_t skip_to_newline(char *pointer) {
     assert(pointer != nullptr && "pointer is nullptr");
 
     size_t i = 0;
-    for (; *(pointer + 1) != '\n'; ++i);
+    for (; *(pointer + i) != '\n'; ++i);
 
     return i;
 }
