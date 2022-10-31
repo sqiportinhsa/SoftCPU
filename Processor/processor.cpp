@@ -7,6 +7,11 @@
 #include "..\Stack\stack_logs.h"
 #include "..\Stack\stack_verification.h"
 
+#define DEF_CMD(name, val, args, ...) \
+    case val:                         \
+        __VA_ARGS__                   \
+        break;                        \
+
 int calculate(CPU *cpu) {
     int n_command = 0;
     int cpu_err   = NO_CPU_ERR;
@@ -15,7 +20,7 @@ int calculate(CPU *cpu) {
         int cmd = *((char*) (cpu->code + cpu->ip));
         cpu->ip += sizeof(char);
 
-        if (cmd == HLT_CMD) {
+        if (cmd == CMD_HLT) {
             break;
         }
 
@@ -35,47 +40,7 @@ int calculate(CPU *cpu) {
         }
 
         switch (cmd & CMD) {
-            case PUSH_CMD:
-                if (cmd & VAL) {
-                    val_for_push += cmd_val;
-                }
-                if (cmd & REG) {
-                    val_for_push += cpu->registers[(int) cmd_reg];
-                }
-                if (cmd & RAM) {
-                    val_for_push  = cpu->ram[val_for_push];
-                }
-                cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
-                break;
-            case ADD_CMD:
-                cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
-                                                        + StackPop(cpu->cpu_stack));
-                break;
-            case SUB_CMD:
-                first_popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
-                cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped);
-                break;
-            case MUL_CMD:
-                cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
-                                                        * StackPop(cpu->cpu_stack));
-                break;
-            case DIV_CMD:
-                first_popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
-                cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
-                break;
-            case OUT_CMD:
-                printf("result: %d", StackPop(cpu->cpu_stack, &cpu->stk_err));
-                break;
-            case POP_CMD:
-                if (cmd & REG) {
-                    cpu->registers[(int) cmd_reg] = StackPop(cpu->cpu_stack, &cpu->stk_err);
-                } else if (cmd & RAM) {
-                    cpu->ram[(int) cmd_val]       = StackPop(cpu->cpu_stack, &cpu->stk_err);
-                } else {
-                    cpu_err |= INCORR_POP;
-                    return cpu_err;
-                }
-                break;
+            #include "../Common/commands.h"
             default:
                 fprintf(stderr, "Error: undefined command\n");
                 cpu_err |= UNDEF_CMD;
@@ -91,6 +56,8 @@ int calculate(CPU *cpu) {
 
     return cpu_err;
 }
+
+#undef DEF_CMD
 
 int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, const char* file) {
     if (cpu == nullptr) {
