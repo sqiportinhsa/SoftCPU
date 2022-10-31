@@ -11,8 +11,8 @@ static int do_command(FILE *output, Command *command);
 
 static Register get_reg_num(char *ptr);
 
-static int parce_for_pop (Command *command, int val);
-static int parce_for_push(Command *command, int val);
+static int parce_for_pop  (Command *command, int val);
+static int parce_for_push (Command *command, int val);
 
 static int get_args_with_first_reg(Command *command, int *shift);
 static int get_args_with_first_val(Command *command, int *shift);
@@ -65,16 +65,23 @@ int assemble(Command* commands, int amount_of_strings) {
                                                                                                    \
             errors |= parce_for_pop(command, val);                                                 \
                                                                                                    \
+            if (errors != 0) {return errors;}                                                      \
+                                                                                                   \
         } else if (args == PUSH_ARGS) {                                                            \
                                                                                                    \
             errors |= parce_for_push(command, val);                                                \
                                                                                                    \
+            if (errors != 0) {return errors;}                                                      \
+                                                                                                   \
         }                                                                                          \
-    } else                                                                                             
+                                                                                                   \
+    } else                                                                                       
 
 
 static int do_command(FILE *output, Command *command) {
+
     if (output == nullptr || command == nullptr) {
+
         return UNEXP_NULLPTR;
     }
 
@@ -93,7 +100,6 @@ static int do_command(FILE *output, Command *command) {
 
     #include "../Common/commands.h"
     {
-
         fprintf(stderr, "invalid command\n");
 
         return INCORRECT_CMD;
