@@ -10,26 +10,34 @@
 int main() {
     int errors = NO_ASS_ERR;
 
-    size_t amount_of_elements = count_elements_in_file("input.txt");
+    Ass ass = {};
 
-    char* text = (char*) calloc(amount_of_elements, sizeof(char));
+    ass.amount_of_code_symbols = count_elements_in_file("input.txt");
 
-    if (text == nullptr) {
+    ass.code = (char*) calloc(ass.amount_of_code_symbols, sizeof(char));
+
+    if (ass.code == nullptr) {
         fprintf(stderr, "memory limit exceed");
         return -1;
     }
 
-    amount_of_elements = read_file(text, amount_of_elements, "input.txt");
+    ass.amount_of_code_symbols = read_file(ass.code, ass.amount_of_code_symbols, "input.txt");
 
-    /*for (size_t i = 0; i < amount_of_elements; ++i) {
-        printf("<%c>: <%d>\n", text[i], text[i]);
+    /*for (size_t i = 0; i < ass.amount_of_code_symbols; ++i) {
+        printf("<%c>: <%d>\n", ass.code[i], ass.code[i]);
     }*/
-    
-    int amount_of_strings = count_strings(text, amount_of_elements);
 
-    Command *commands = (Command*) calloc(amount_of_strings, sizeof(Command));
+    ass.amount_of_code_strings = count_strings(ass.code, ass.amount_of_code_symbols);
 
-    amount_of_strings = place_pointers(commands, text, amount_of_elements, amount_of_strings);
+
+    ass.commands = (Command*) calloc(ass.amount_of_code_strings, sizeof(Command));
+
+    ass.markers  = (Marker*)  calloc(ass.amount_of_code_strings, sizeof(Marker));
+
+    ass.amount_of_code_strings = place_pointers(&ass);
+
+    errors |= verify_markers(ass.markers, ass.amount_of_markers);
+
 
     /*for (int i = 0; i < amount_of_strings; ++i) {
         printf("%s: ", commands[i].cmd_ptr);
@@ -38,7 +46,7 @@ int main() {
         }
     }*/
 
-    errors |= assemble(commands, amount_of_strings);
+    errors |= assemble(&ass);
     
     return 0;
 }

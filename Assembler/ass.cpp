@@ -7,12 +7,15 @@
 #include "..\Common\file_reading.h"
 
 
-static int do_command(FILE *output, Command *command);
+static int do_command(FILE *output, Command *command, Ass *ass);
 
 static Register get_reg_num(char *ptr);
 
-static int parce_for_pop  (Command *command, int val);
-static int parce_for_push (Command *command, int val);
+static int parce_command(Ass *ass, Command *command, size_t *index_in_assembled_code);
+
+static int parce_for_pop  (Command *command, int cmd_num);
+static int parce_for_push (Command *command, int cmd_num);
+static int parce_for_jump (Command *command, int cmd_num, Ass *ass);
 
 static int get_args_with_first_reg(Command *command, int *shift);
 static int get_args_with_first_val(Command *command, int *shift);
@@ -20,8 +23,12 @@ static int get_args_with_first_val(Command *command, int *shift);
 static size_t skip_comment(char *pointer);
 
 
-int assemble(Command* commands, int amount_of_strings) {
-    if (commands == nullptr) {
+int assemble(Ass *ass) {
+    if (ass == nullptr) {
+        return UNEXP_NULLPTR;
+    }
+
+    if (ass->commands == nullptr || ass->markers == nullptr || ass->code == nullptr) {
         return UNEXP_NULLPTR;
     }
 
@@ -36,13 +43,13 @@ int assemble(Command* commands, int amount_of_strings) {
         return errors;
     }
 
-    fwrite(&Verification_const, sizeof(int), 1, output);
-    fwrite(&Ass_version,        sizeof(int), 1, output);
-    fwrite(&amount_of_strings,  sizeof(int), 1, output);
+    fwrite(&Verification_const,           sizeof(int), 1, output);
+    fwrite(&Ass_version,                  sizeof(int), 1, output);
+    fwrite(&ass->amount_of_code_strings,  sizeof(int), 1, output);
 
-    while (ncommand < amount_of_strings) {
+    while (ncommand < ass->amount_of_code_strings) {
         ASS_DEBUG("start %d\n", ncommand);
-        errors |= do_command(output, &commands[ncommand]);
+        errors |= do_command(output, &ass->commands[ncommand], ass);
         ASS_DEBUG("done  %d\n", ncommand);
         ++ncommand;
     }
@@ -54,31 +61,36 @@ int assemble(Command* commands, int amount_of_strings) {
     return errors;
 }
 
-#define DEF_CMD(name, val, args, ...)                                                              \
+#define DEF_CMD(name, cmd_num, args, ...)                                                          \
     if (stricmp(cmd, #name) == 0) {                                                                \
                                                                                                    \
         if (args == NO_ARGS) {                                                                     \
                                                                                                    \
-            command->cmd = val;                                                                    \
+            command->cmd = cmd_num;                                                                \
                                                                                                    \
         } else if (args == POP__ARGS) {                                                            \
                                                                                                    \
-            errors |= parce_for_pop(command, val);                                                 \
+            errors |= parce_for_pop(command, cmd_num);                                             \
                                                                                                    \
             if (errors != 0) {return errors;}                                                      \
                                                                                                    \
         } else if (args == PUSH_ARGS) {                                                            \
                                                                                                    \
-            errors |= parce_for_push(command, val);                                                \
+            errors |= parce_for_push(command, cmd_num);                                            \
                                                                                                    \
             if (errors != 0) {return errors;}                                                      \
                                                                                                    \
+        } else if (args == JUMP_ARGS) {                                                            \
+                                                                                                   \
+            errors |= parce_for_jump(command, cmd_num, ass);                                       \
+                                                                                                   \
+            if (errors != 0) {return errors;}                                                      \
         }                                                                                          \
                                                                                                    \
     } else                                                                                       
 
 
-static int do_command(FILE *output, Command *command) {
+static int do_command(FILE *output, Command *command, Ass *ass) {
 
     if (output == nullptr || command == nullptr) {
 
@@ -119,18 +131,68 @@ static int do_command(FILE *output, Command *command) {
         fwrite(&command->reg, sizeof(char), 1, output);
     }
 
+    if (command->jump_to != 0) {
+
+        fwrite(&command->jump_to, sizeof(size_t), 1, output);
+    }
+
     fflush(output);
     fflush(stderr);
 
     return errors;
 }
 
+static int parce_command(Ass *ass, Command *command, size_t *index_in_assembled_code) {
+    if (ass == nullptr || index_in_assembled_code == nullptr) {
+        return UNEXP_NULLPTR;
+    }
+
+    int errors = NO_ASS_ERR;
+
+    int len = command->cmd_len;
+
+    char cmd[Max_cmd_len] = {};
+
+    memcpy(cmd, command->cmd_ptr, len);
+
+    cmd[len] = '\0';
+
+    command->cmd = 0;
+    command->val = 0;
+    command->reg = 0;
+
+    #include "../Common/commands.h"
+    {
+        fprintf(stderr, "invalid command\n");
+    
+        return INCORRECT_CMD;
+    }
+
+    int cmd_size = sizeof(char);
+
+    if (command->cmd & VAL) {
+
+        cmd_size += sizeof(int);
+    }
+
+    if (command->cmd & REG) {
+
+        cmd_size += sizeof(char);
+    }
+
+    *index_in_assembled_code += cmd_size;
+    
+    return errors;
+}
+
 #undef DEF_CMD
 
-static int parce_for_pop(Command *command, int val) {
+static int parce_for_pop(Command *command, int cmd_num) {
+    assert (command != nullptr);
+
     int errors = 0;
 
-    command->cmd = (char) val;                                                                    
+    command->cmd = (char) cmd_num;                                                                    
                                                                                            
     if (command->val_ptr == nullptr) {                                                     
         fprintf(stderr, "incorrect pop: argument expected\n");                             
@@ -207,10 +269,13 @@ static int parce_for_pop(Command *command, int val) {
     return errors;
 }
       
-static int parce_for_push(Command *command, int val) {
+static int parce_for_push(Command *command, int cmd_num) {
+
+    assert(command != nullptr);
+    
     int errors = 0;
 
-    command->cmd = (char) val;
+    command->cmd = (char) cmd_num;
                                                                                                    
     if (command->val_ptr == nullptr) {
         fprintf(stderr, "incorrect push: argument expected\n");
@@ -261,6 +326,7 @@ static int parce_for_push(Command *command, int val) {
         command->cmd |= RAM;
                                                                                                
     } else {
+
         fprintf(stderr, "incorrect push argument\n");
                                                                                                
         errors |= INCORRECT_ARG;
@@ -271,68 +337,134 @@ static int parce_for_push(Command *command, int val) {
     return errors;
 }
 
-int place_pointers(Command commands[], char *text, size_t amount_of_symbols, 
-                                                      int amount_of_strings) {
-    if (text == nullptr || commands == nullptr) {
-        return 0;
+static int parce_for_jump(Command *command, int cmd_num, Ass *ass) {
+    assert (command != nullptr);
+    assert (ass     != nullptr);
+
+    command->cmd = (char) cmd_num;
+
+    for (int nmarker = 0; nmarker < ass->amount_of_markers; ++nmarker) {
+
+        if (strnicmp(ass->markers[nmarker].ptr, command->val_ptr, ass->markers[nmarker].len) == 0) {
+
+            command->jump_to = ass->markers[nmarker].index_in_assembled;
+            
+            break;
+        }
     }
 
-    commands[0].cmd_ptr = &(text[0]);
-    int nstring = 0;
-    size_t nsym = 0;
+    if (command->jump_to == 0) {
+        return JMP_TO_NONEXS_MARK;
+    }
 
-    while (nstring < amount_of_strings && nsym < amount_of_symbols) {
+    return NO_ASS_ERR;
+}
+
+int place_pointers(Ass *ass) {
+    if (ass->code == nullptr || ass->commands == nullptr) {
+        return UNEXP_NULLPTR;
+    }
+
+    ass->commands[0].cmd_ptr = &(ass->code[0]);
+
+    int ncommand = 0;
+    int  nmarker = 0;
+    size_t  nsym = 0;
+
+    size_t position_in_assembled_code = 3 * sizeof(int);
+
+    while (ncommand < ass->amount_of_code_strings && 
+            nmarker < ass->amount_of_code_strings &&
+               nsym < ass->amount_of_code_symbols) {
+
         int cmd_len = 0;
 
         ASS_DEBUG("start\n");
 
-        nsym += skip_spaces(text + nsym);
+        nsym += skip_spaces(ass->code + nsym);
 
-        nsym += skip_comment(text + nsym);
+        nsym += skip_comment(ass->code + nsym);
 
-        commands[nstring].cmd_ptr = &(text[nsym]);
+        ASS_DEBUG("number of command %d first sym: %lld. First symbol: %c\n", ncommand, nsym, ass->code[nsym]);
 
-        ASS_DEBUG("number of command %d first sym: %lld. First symbol: %c\n", nstring, nsym, text[nsym]);
-
-        if (text[nsym] == ':') { //string is a marker
+        if (ass->code[nsym] == ':') { //string is a marker
             ++nsym;
-            ++cmd_len;
+            
+            ass->markers[nmarker].ptr     = &(ass->code[nsym]);
+            ass->markers[nmarker].nstring = ncommand + 1;
 
-            commands[nstring].val_ptr = &text[nsym];
-            commands[nstring].cmd_len = cmd_len;
+            ass->markers[nmarker].index_in_assembled = position_in_assembled_code;
 
-            nsym += skip_to_newline(text + nsym);
+            ass->markers[nmarker].len += skip_to_newline(ass->code + nsym);
+
+            nsym += ass->markers[nmarker].len;
 
             ++nsym;
-            ++nstring;
+            ++nmarker;
 
             continue;
         }
 
-        for (; isalpha(text[nsym]); ++nsym, ++cmd_len); //normal command
+        ass->commands[ncommand].cmd_ptr = &(ass->code[nsym]);
 
-        commands[nstring].cmd_len = cmd_len;
+        for (; isalpha(ass->code[nsym]); ++nsym, ++cmd_len); //string is a command
 
-        for (; text[nsym] == ' '; ++nsym);
+        ass->commands[ncommand].cmd_len = cmd_len;
 
-        if (text[nsym] == '\n' || text[nsym] == '\0') { //command without arguments
-            commands[nstring].val_ptr = nullptr;
+        for (; ass->code[nsym] == ' '; ++nsym);
+
+        if (ass->code[nsym] == '\n' || ass->code[nsym] == '\0') { //command without arguments
+            ass->commands[ncommand].val_ptr = nullptr;
+
             ++nsym;
-            ++nstring;
+            ++ncommand;
+
             ASS_DEBUG("there is no value for this command.\n");
+
             continue;
         }
 
-        commands[nstring].val_ptr = &(text[nsym]); //command with argument
+        ass->commands[ncommand].val_ptr = &(ass->code[nsym]); //command with argument
         ASS_DEBUG("number of value's position: %lld\n", nsym);
 
-        for (; text[nsym] != '\n'; ++nsym);
+        parce_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
+
+        nsym += skip_to_newline(&ass->code[nsym]);
 
         ++nsym;
-        ++nstring;
+        ++ncommand;
     }
 
-    return nstring;
+    ass->amount_of_code_strings = ncommand;
+    ass->amount_of_markers      = nmarker;
+
+    return ncommand;
+}
+
+int verify_markers(const Marker *markers, int amount_of_markers) {
+    assert(markers != nullptr && "nullptr to markers");
+
+    /*verify pointers*/
+
+    for (int i = 0; i < amount_of_markers; ++i) {
+        if (markers[i]. ptr == nullptr) {
+            return UNEXP_NULLPTR;
+        }
+    }
+
+    /*checkup for identical markers*/
+
+    for (int i = 0; i < amount_of_markers; ++i) {
+        for (int j = i + 1; j < amount_of_markers; ++j) {
+            if (markers[i].len == markers[j].len) {
+                if (strnicmp(markers[i].ptr, markers[j].ptr, markers[i].len) == 0) {
+                    return SAME_MARKERS;
+                }
+            }
+        }
+    }
+
+    return NO_ASS_ERR;
 }
 
 static Register get_reg_num(char *ptr) {
