@@ -29,7 +29,7 @@ int main() {
 
     Command *commands = (Command*) calloc(amount_of_strings, sizeof(Command));
 
-    errors |= place_pointers(commands, text, amount_of_elements, amount_of_strings);
+    amount_of_strings = place_pointers(commands, text, amount_of_elements, amount_of_strings);
 
     /*for (int i = 0; i < amount_of_strings; ++i) {
         printf("%s: ", commands[i].cmd_ptr);
