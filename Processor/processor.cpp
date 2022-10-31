@@ -13,10 +13,9 @@
         break;                        \
 
 int calculate(CPU *cpu) {
-    int n_command = 0;
     int cpu_err   = NO_CPU_ERR;
 
-    while (n_command < cpu->amount_of_cmds && cpu->ip < cpu->code_len) {
+    while (cpu->ip < cpu->code_len) {
         int cmd = *((char*) (cpu->code + cpu->ip));
         cpu->ip += sizeof(char);
 
@@ -50,8 +49,6 @@ int calculate(CPU *cpu) {
         if (cpu->stk_err != 0) {
             cpu_err |= STACK_ERR;
         }
-
-        ++n_command;
     }
 
     return cpu_err;
