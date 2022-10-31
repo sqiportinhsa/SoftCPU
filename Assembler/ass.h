@@ -48,11 +48,8 @@ typedef enum {
 } AssErrors;
 
 int assemble(Command* commands, int amount_of_strings);
-int do_command(FILE *output1, Command *command);
+
 int place_pointers(Command commands[], char *text, size_t amount_of_symbols, 
                                                        int amount_of_strings);
-Register get_reg_num(char *ptr);
-int get_args_with_first_reg(Command *command, int *shift);
-int get_args_with_first_val(Command *command, int *shift);
 
 #endif
