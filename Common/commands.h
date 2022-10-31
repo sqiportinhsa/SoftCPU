@@ -53,13 +53,29 @@ DEF_CMD(POP, 7, POP__ARGS, {
     }
 })
 
-DEF_CMD(IN,  8, NO_ARGS, {
-
+DEF_CMD(JMP, 8, JUMP_ARGS, {
+    cpu->ip = *((size_t *) cpu->code + cpu->ip);
 })
 
-DEF_CMD(JMP, 9, JUMP_ARGS, {
+#define DEF_JMP_IF(name, cmd_num, oper)                                \
+        DEF_CMD(name, cmd_num, JUMP_ARGS, {                            \
+            first__popped = StackPop (cpu->cpu_stack, &cpu->stk_err);  \
+            second_popped = StackPop (cpu->cpu_stack, &cpu->stk_err);  \
+                                                                       \
+            if (first__popped oper second_popped) {                    \
+                cpu->ip = *((size_t *) cpu->code + cpu->ip);           \
+            }                                                          \
+        })
 
-})
+DEF_JMP_IF(JA,  9 , > )
+DEF_JMP_IF(JAE, 10, >=)
+DEF_JMP_IF(JB,  11, < )
+DEF_JMP_IF(JBE, 12, <=)
+DEF_JMP_IF(JE,  13, ==)
+DEF_JMP_IF(JNE, 14, !=)
+
+#undef DEF_JMP_IF
+
 
 #undef No_args
 #undef Standart_args
