@@ -1,10 +1,11 @@
-#define No_args 0
-#define Standart_args 1
-#define Jump_args 2
+#define NO_ARGS 0
+#define PUSH_ARGS 1
+#define POP__ARGS 2
+#define JUMP_ARGS 3
 
-DEF_CMD(HLT, 0, No_args)
+DEF_CMD(HLT, 0, NO_ARGS)
 
-DEF_CMD(PUSH, 1, Standart_args, {
+DEF_CMD(PUSH, 1, PUSH_ARGS, {
     if (cmd & VAL) {
         val_for_push += cmd_val;
     }
@@ -17,31 +18,31 @@ DEF_CMD(PUSH, 1, Standart_args, {
     cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
 })
 
-DEF_CMD(ADD, 2, No_args, {
+DEF_CMD(ADD, 2, NO_ARGS, {
     cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
                                             + StackPop(cpu->cpu_stack));
 })
 
-DEF_CMD(MUL, 3, No_args, {
+DEF_CMD(MUL, 3, NO_ARGS, {
     cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
                                             * StackPop(cpu->cpu_stack));
 })
 
-DEF_CMD(SUB, 4, No_args, {
+DEF_CMD(SUB, 4, NO_ARGS, {
     first_popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
     cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first_popped);
 })
 
-DEF_CMD(DIV, 5, No_args, {
+DEF_CMD(DIV, 5, NO_ARGS, {
     first_popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
     cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first_popped);
 })
 
-DEF_CMD(OUT, 6, No_args, {
+DEF_CMD(OUT, 6, NO_ARGS, {
     printf("result: %d", StackPop(cpu->cpu_stack, &cpu->stk_err));
 })
 
-DEF_CMD(POP, 7, Standart_args, {
+DEF_CMD(POP, 7, POP__ARGS, {
     if (cmd & REG) {
         cpu->registers[(int) cmd_reg] = StackPop(cpu->cpu_stack, &cpu->stk_err);
     } else if (cmd & RAM) {
@@ -52,11 +53,11 @@ DEF_CMD(POP, 7, Standart_args, {
     }
 })
 
-DEF_CMD(IN,  8, No_args, {
+DEF_CMD(IN,  8, NO_ARGS, {
 
 })
 
-DEF_CMD(JMP, 9, Jump_args, {
+DEF_CMD(JMP, 9, JUMP_ARGS, {
 
 })
 
