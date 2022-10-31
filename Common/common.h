@@ -3,20 +3,16 @@
 
 const int Verification_const = 0xDEED;
 
+#define DEF_CMD(name, val, ...) CMD_##name = val,
+
 typedef enum {
     MIN_CMD   = -1,
-    HLT_CMD   =  0,
-    PUSH_CMD  =  1,
-    ADD_CMD   =  2,
-    MUL_CMD   =  3,
-    SUB_CMD   =  4,
-    DIV_CMD   =  5,
-    OUT_CMD   =  6,
-    POP_CMD   =  7,
-    IN_CMD    =  8,
-    MAX_CMD   =  9,
-    NOT_A_CMD =  10,
+    #include "commands.h"
+    MAX_CMD   =  10,
+    NOT_A_CMD =  11,
 } Commands;
+
+#undef DEF_CMD
 
 typedef enum {
     CMD = 1 | (1 << 1) | (1 << 2) | (1 << 3),
