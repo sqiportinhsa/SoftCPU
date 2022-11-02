@@ -1,14 +1,19 @@
 #ifndef ASSMBLR
 #define ASSMBLR
 
-#define DEBUG_ASS
+#include "../Stack/stack.h"
+#include "../Stack/stack_logs.h"
+#include "../Stack/stack_verification.h"
 
-#include "..\Stack\stack.h"
-#include "..\Stack\stack_logs.h"
-#include "..\Stack\stack_verification.h"
+#include "../Common/file_reading.hpp"
+
+#define DEBUG_ASS
 
 const int Ass_version = 3;
 const int Max_cmd_len = 5;
+
+static const char *default_input_filename  = "input.txt";
+static const char *default_output_filename = "output.bin";
 
 #ifdef DEBUG_ASS
 #define ASS_DEBUG(format, ...) fprintf(stderr, format, ##__VA_ARGS__)
@@ -16,33 +21,39 @@ const int Max_cmd_len = 5;
 #define ASS_DEBUG(format, ...)
 #endif
 
-typedef struct {
-    char*      cmd_ptr;
-    char*      val_ptr;
-    int        cmd_len;
+#define RETURN_IF(errors)                                                              \
+        if (errrors != 0) {                                                            \
+            fprintf(stderr, "Error: can't compile code. Stop. Errors: %d.\n", errors); \
+            return -1;                                                                 \
+        }
+
+struct Command {
+    char*      cmd_ptr = nullptr;
+    char*      val_ptr = nullptr;
+    int        cmd_len = 0;
     char       cmd = 0;
     int        val = 0;
     char       reg = 0;
     size_t jump_to = 0;
-} Command;
+};
 
-typedef struct {
+struct Marker {
     char*  ptr                = nullptr;
     int    nstring            = 0;
     int    len                = 0;
     size_t index_in_assembled = 0;
-} Marker;
+};
 
-typedef struct {
+struct Ass {
     Command* commands;
     Marker*  markers;
     char*    code;
-    size_t   amount_of_code_symbols = 0;
-    int      amount_of_code_strings = 0;
-    int      amount_of_markers      = 0;
-} Ass;
+    size_t   amount_of_code_symbols;
+    int      amount_of_code_strings;
+    int      amount_of_markers;
+};
 
-typedef enum {
+enum Register {
     NOT_REG = -1,
     MIN_REG = 0,
     RAX = 1,
@@ -50,9 +61,9 @@ typedef enum {
     RCX = 3,
     RDX = 4,
     MAX_REG = 5,
-} Register;
+};
 
-typedef enum {
+enum AssErrors {
     NO_ASS_ERR         = 0,
     INCORRECT_CMD      = 1 << 1,
     INCORRECT_ARG      = 1 << 2,
@@ -67,12 +78,18 @@ typedef enum {
     SAME_MARKERS       = 1 << 11,
     INCORR_INDEX       = 1 << 12,
     JMP_TO_NONEXS_MARK = 1 << 13,
-} AssErrors;
+};
+
+CLArgs cmd_line_args(int argc, const char **argv);
+
+int ass_constructor(Ass *ass, const char *filename);
 
 int assemble(Ass *ass);
 
 int place_pointers(Ass *ass);
 
 int verify_markers(const Marker *markers, int amount_of_markers);
+
+void free_ass(Ass *ass);
 
 #endif

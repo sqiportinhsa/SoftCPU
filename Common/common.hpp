@@ -6,7 +6,9 @@ const int Verification_const = 0xDEED;
 #define DEF_CMD(name, val, ...) CMD_##name = val,
 
 typedef enum {
+    MIN_CMD = -1,
     #include "commands.h"
+    MAX_CMD   = 10,
     NOT_A_CMD =  11,
 } Commands;
 

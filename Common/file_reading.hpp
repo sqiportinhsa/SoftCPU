@@ -3,6 +3,13 @@
 
 #include <stdio.h>
 
+struct CLArgs {
+    const char *input;
+    const char *output;
+};
+
+CLArgs parse_cmd_line(int argc, const char **argv);
+
 size_t count_elements_in_file(const char file_name[]);
 
 size_t read_file(char text[], size_t amount_of_symbols, const char* file_name);

@@ -1,7 +1,7 @@
 #ifndef UTILS
 #define UTILS
 
-#include "common.h"
+#include "common.hpp"
 
 typedef struct {
     Commands cmd;
