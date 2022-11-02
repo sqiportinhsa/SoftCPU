@@ -1,13 +1,57 @@
 #include <stdio.h>
-#include <sys\stat.h>
-#include <cassert>
+#include <sys/stat.h>
+#include <assert.h>
+#include <string.h>
 
-#include "file_reading.h"
+#include "file_reading.hpp"
+
+CLArgs parse_cmd_line(int argc, const char **argv) {
+    assert(argc >= 1);
+    assert(argv != nullptr);
+
+    // Ignore first arg
+    argc--;
+    argv++;
+
+    CLArgs args = {};
+
+    args.input  = nullptr;
+    args.output = nullptr;
+
+    for (int i = 0; i < argc; ++i) {
+        // -o: output filename
+        if (strcmp(argv[i], "-o") == 0) {
+            ++i;
+
+            if (i >= argc) {
+                fprintf(stderr, "Warning: -o flag requires output file name\n");
+                break;
+            }
+
+            args.input = argv[i];
+        }
+
+        // -i: input filename
+        if (strcmp(argv[i], "-i") == 0) {
+            ++i;
+
+            if (i >= argc) {
+                fprintf(stderr, "Warning: -i flag requires input file name\n");
+                break;
+            }
+
+            args.output = argv[i];
+        }
+    }
+
+    return args;
+}
 
 size_t count_elements_in_file(const char file_name[]) {
+    assert(file_name != nullptr && "nullptr to file_name");
     struct stat a = {};
     stat(file_name, &a);
-    return a.st_size;
+    return a.st_size + 1;
 }
 
 size_t read_file(char text[], size_t amount_of_symbols, const char* file_name) {
@@ -20,6 +64,7 @@ size_t read_file(char text[], size_t amount_of_symbols, const char* file_name) {
     fclose(input);
 
     size_t real_amount_of_symbols = nread + 1;
+
     text[real_amount_of_symbols - 1] = '\0';
 
     return real_amount_of_symbols;
