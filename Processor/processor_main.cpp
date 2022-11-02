@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "processor.h"
-#include "..\Common\file_reading.h"
-#include "..\Stack\stack_logs.h"
+#include "processor.hpp"
+#include "../Common/file_reading.hpp"
+#include "../Stack/stack_logs.h"
 
 int main() {
     FILE *logfile = fopen("logfile.txt", "w");
