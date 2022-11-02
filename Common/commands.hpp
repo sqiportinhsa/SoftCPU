@@ -30,12 +30,12 @@ DEF_CMD(MUL, 3, NO_ARGS, {
 
 DEF_CMD(SUB, 4, NO_ARGS, {
     first__popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
-    cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first__popped);
+    cpu->stk_err  |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first__popped);
 })
 
 DEF_CMD(DIV, 5, NO_ARGS, {
     first__popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
-    cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first__popped);
+    cpu->stk_err  |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first__popped);
 })
 
 DEF_CMD(OUT, 6, NO_ARGS, {
