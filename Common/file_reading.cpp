@@ -28,7 +28,7 @@ CLArgs parse_cmd_line(int argc, const char **argv) {
                 break;
             }
 
-            args.input = argv[i];
+            args.output = argv[i];
         }
 
         // -i: input filename
@@ -40,7 +40,7 @@ CLArgs parse_cmd_line(int argc, const char **argv) {
                 break;
             }
 
-            args.output = argv[i];
+            args.input = argv[i];
         }
     }
 
@@ -122,7 +122,7 @@ size_t skip_to_newline(char *pointer) {
     assert(pointer != nullptr && "pointer is nullptr");
 
     size_t i = 0;
-    
+
     for (; *(pointer + i) != '\n' && *(pointer + i) != '\0'; ++i);
 
     return i;
