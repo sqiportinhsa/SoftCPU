@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "processor.h"
-#include "..\Common\file_reading.h"
-#include "..\Stack\stack.h"
-#include "..\Stack\stack_logs.h"
-#include "..\Stack\stack_verification.h"
+#include "processor.hpp"
+#include "../Common/file_reading.hpp"
+#include "../Stack/stack.h"
+#include "../Stack/stack_logs.h"
+#include "../Stack/stack_verification.h"
 
 #define DEF_CMD(name, val, args, ...) \
     case val:                         \
@@ -15,18 +15,23 @@
 int calculate(CPU *cpu) {
     int cpu_err   = NO_CPU_ERR;
 
+    printf("code len: %zu\n", cpu->code_len);
+
     while (cpu->ip < cpu->code_len) {
-        int cmd = *((char*) (cpu->code + cpu->ip));
+        dump_cpu(cpu, GetLogStream());
+
+        int cmd  = *((char*) (cpu->code + cpu->ip));
         cpu->ip += sizeof(char);
 
         if (cmd == CMD_HLT) {
             break;
         }
 
-        int  first_popped = 0;
-        int  val_for_push = 0;
-        int  cmd_val      = 0;
-        char cmd_reg      = 0;
+        int  first__popped = 0;
+        int  second_popped = 0;
+        int  val_for_push  = 0;
+        int  cmd_val       = 0;
+        char cmd_reg       = 0;
 
         if (cmd & VAL) {
             cmd_val = *((int*)  (cpu->code + cpu->ip));
@@ -39,7 +44,7 @@ int calculate(CPU *cpu) {
         }
 
         switch (cmd & CMD) {
-            #include "../Common/commands.h"
+            #include "../Common/commands.hpp"
             default:
                 fprintf(stderr, "Error: undefined command\n");
                 cpu_err |= UNDEF_CMD;
@@ -49,6 +54,8 @@ int calculate(CPU *cpu) {
         if (cpu->stk_err != 0) {
             cpu_err |= STACK_ERR;
         }
+
+        printf("ip after itteration %zu\n", cpu->ip);
     }
 
     return cpu_err;
