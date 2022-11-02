@@ -7,7 +7,7 @@ const int Verification_const = 0xDEED;
 
 typedef enum {
     MIN_CMD = -1,
-    #include "commands.h"
+    #include "commands.hpp"
     MAX_CMD   = 10,
     NOT_A_CMD =  11,
 } Commands;
