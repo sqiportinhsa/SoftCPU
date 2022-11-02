@@ -1,9 +1,9 @@
 #ifndef PROCESSOR
 #define PROCESSOR
 
-#include "..\Common\common.hpp"
-#include "..\Common\utils.hpp"
-#include "..\Stack\stack.h"
+#include "../Common/common.hpp"
+#include "../Common/utils.hpp"
+#include "../Stack/stack.h"
 
 const int Proc_version   = 3;
 const int Reg_amount     = 5;
