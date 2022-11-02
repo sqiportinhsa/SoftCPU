@@ -115,14 +115,15 @@ size_t skip_spaces(char *pointer) {
 void skip_to_newline(char **pointer) {
     assert(pointer != nullptr && "pointer is nullptr");
 
-    for (; **pointer != '\n'; ++(*pointer));
+    for (; **pointer != '\n' && **pointer != '\0'; ++(*pointer));
 }
 
 size_t skip_to_newline(char *pointer) {
     assert(pointer != nullptr && "pointer is nullptr");
 
     size_t i = 0;
-    for (; *(pointer + i) != '\n'; ++i);
+    
+    for (; *(pointer + i) != '\n' && *(pointer + i) != '\0'; ++i);
 
     return i;
 }
