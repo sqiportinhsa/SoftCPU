@@ -34,13 +34,12 @@ struct Command {
     char       cmd = 0;
     int        val = 0;
     char       reg = 0;
-    size_t jump_to = 0;
 };
 
 struct Marker {
-    char*  ptr                = nullptr;
-    int    len                = 0;
-    size_t index_in_assembled = 0;
+    char*                          ptr = nullptr;
+    unsigned int                   len = 0;
+    unsigned int    index_in_assembled = 0;
 };
 
 struct Ass {

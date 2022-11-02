@@ -12,12 +12,12 @@ static Register get_reg_num(char *ptr);
 static int first_ass_pass(Ass *ass);
 static int second_ass_pass(Ass *ass, FILE *output);
 
-static int process_marker(Ass *ass, size_t nsym, size_t position_in_assembled_code, int nmarker);
+static int process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker);
 static int process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len);
 
 static void write_command(FILE *output, const Command *command);
 
-static int parse_command(Ass *ass, Command *command, size_t *index_in_assembled_code = nullptr);
+static int parse_command(Ass *ass, Command *command, int *index_in_assembled_code = nullptr);
 
 static int verify_markers(const Marker *markers, int amount_of_markers);
 
@@ -124,6 +124,8 @@ int assemble(Ass *ass) {
         return errors;
     }
 
+    printf("\n\n--------------------------------------------------\n\n");
+
     errors |= second_ass_pass(ass, output);
 
     if (errors != 0) {
@@ -148,7 +150,7 @@ static int first_ass_pass(Ass *ass) {
     int  nmarker = 0;
     size_t  nsym = 0;
 
-    size_t position_in_assembled_code = 3 * sizeof(int);
+    int position_in_assembled_code = 3 * sizeof(int);
 
     while (ncommand < ass->amount_of_code_strings && 
             nmarker < ass->amount_of_code_strings &&
@@ -181,7 +183,11 @@ static int first_ass_pass(Ass *ass) {
 
         ASS_DEBUG("index after processing command: %zu\n", nsym);
 
+        printf("parsing command %d. pos in assembled before: %d\n", ncommand, position_in_assembled_code);
+
         parse_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
+
+        printf("parsing command %d. pos in assembled after : %d\n", ncommand, position_in_assembled_code);
 
         ++nsym;
         ++ncommand;
@@ -194,12 +200,12 @@ static int first_ass_pass(Ass *ass) {
     return NO_ASS_ERR;
 }
 
-static int process_marker(Ass *ass, size_t nsym, size_t position_in_assembled_code, int nmarker) {
+static int process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker) {
     ++nsym;
             
     ass->markers[nmarker].ptr                = &(ass->code[nsym]);
     ass->markers[nmarker].index_in_assembled = position_in_assembled_code;
-    printf("position in asssembled code: %zu", ass->markers[nmarker].index_in_assembled);
+    printf("position in asssembled code: %zu\n", ass->markers[nmarker].index_in_assembled);
     ass->markers[nmarker].len               += skip_to_newline(ass->code + nsym);
 
     nsym += ass->markers[nmarker].len;
@@ -280,13 +286,6 @@ static void write_command(FILE *output, const Command *command) {
         fwrite(&command->reg, sizeof(char), 1, output);
     }
 
-    if (command->jump_to != 0) {
-
-        printf("there is a jump parameter for this command: %d\n", command->jump_to);
-
-        fwrite(&command->jump_to, sizeof(size_t), 1, output);
-    }
-
     fflush(output);
 }
 
@@ -318,7 +317,7 @@ static void write_command(FILE *output, const Command *command) {
                                                                                                    \
     } else
 
-static int parse_command(Ass *ass, Command *command, size_t *index_in_assembled_code) {
+static int parse_command(Ass *ass, Command *command, int *index_in_assembled_code) {
     if (ass == nullptr || command == nullptr) {
         return UNEXP_NULLPTR;
     }
@@ -347,6 +346,8 @@ static int parse_command(Ass *ass, Command *command, size_t *index_in_assembled_
     int cmd_size = sizeof(char);
 
     if (command->cmd & VAL) {
+
+        printf("added sizeof(int)\n");
 
         cmd_size += sizeof(int);
     }
@@ -520,24 +521,20 @@ static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
     assert (command != nullptr);
     assert (ass     != nullptr);
 
-    command->cmd = (char) cmd_num;
+    command->cmd  = (char) cmd_num;
+    command->cmd |= VAL;
 
     for (int nmarker = 0; nmarker < ass->amount_of_markers; ++nmarker) {
 
         if (strncasecmp(ass->markers[nmarker].ptr, command->val_ptr, 
                                     ass->markers[nmarker].len) == 0) {
 
-            command->jump_to = ass->markers[nmarker].index_in_assembled;
+            command->val = ass->markers[nmarker].index_in_assembled;
 
-            printf("%zu", command->jump_to);
+            printf("index in assembled: %d\n", command->val);
             
             break;
         }
-    }
-
-    if (command->jump_to == 0) {
-        printf("there is not matching marker\n");
-        return JMP_TO_NONEXS_MARK;
     }
 
     return NO_ASS_ERR;
