@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <cassert>
 
-#include "utils.h"
-#include "file_reading.h"
+#include "utils.hpp"
+#include "file_reading.hpp"
 
 int get_commands(char *text, Command *commands, size_t amount_of_elems) {
     assert(text     != nullptr && "text is nullptr");
@@ -27,7 +27,7 @@ int get_commands(char *text, Command *commands, size_t amount_of_elems) {
         //printf("ptr to next symbol:          %lld\n", n_elem);
 
         switch (commands[n_command].cmd) {
-            case PUSH_CMD:
+            case CMD_PUSH:
                 n_elem += get_val(&(text[n_elem]), &(commands[n_command].val));
                 ++n_elem;
                 //printf("ptr to sym after value:      %lld\n", n_elem);
