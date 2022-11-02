@@ -7,11 +7,19 @@
 #include "../Common/file_reading.hpp"
 
 
-static int do_command(FILE *output, Command *command, Ass *ass);
-
 static Register get_reg_num(char *ptr);
 
-static int parse_command(Ass *ass, Command *command, size_t *index_in_assembled_code);
+static int first_ass_pass(Ass *ass);
+static int second_ass_pass(Ass *ass, FILE *output);
+
+static int process_marker(Ass *ass, size_t nsym, size_t position_in_assembled_code, int nmarker);
+static int process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len);
+
+static void write_command(FILE *output, const Command *command);
+
+static int parse_command(Ass *ass, Command *command, size_t *index_in_assembled_code = nullptr);
+
+static int verify_markers(const Marker *markers, int amount_of_markers);
 
 static int parse_for_pop  (Command *command, int cmd_num);
 static int parse_for_push (Command *command, int cmd_num);
@@ -37,10 +45,10 @@ CLArgs cmd_line_args(int argc, const char **argv) {
     return args;
 }
 
-int ass_constructor(Ass *ass, const char *filename) {
-    assert(filename != nullptr && "nullptr to filname");
+int ass_constructor(Ass *ass, CLArgs *args) {
+    assert(args != nullptr && "nullptr to filname");
 
-    ass->amount_of_code_symbols = count_elements_in_file(filename);
+    ass->amount_of_code_symbols = count_elements_in_file(args->input);
 
     ass->code = (char*) calloc(ass->amount_of_code_symbols, sizeof(char));
 
@@ -50,7 +58,7 @@ int ass_constructor(Ass *ass, const char *filename) {
     }
 
 
-    ass->amount_of_code_symbols = read_file(ass->code, ass->amount_of_code_symbols, filename);
+    ass->amount_of_code_symbols = read_file(ass->code, ass->amount_of_code_symbols, args->input);
 
     ass->amount_of_code_strings = count_strings(ass->code, ass->amount_of_code_symbols);
 
@@ -69,8 +77,8 @@ int ass_constructor(Ass *ass, const char *filename) {
         return MEMORY_EXCEED;
     }
 
-
-    ass->amount_of_code_strings = place_pointers(ass);
+    ass->input_name  = args->input;
+    ass->output_name = args->output;
 
     return 0;
 }
@@ -90,10 +98,9 @@ int assemble(Ass *ass) {
         return UNEXP_NULLPTR;
     }
 
-    int ncommand = 0;
     int errors   = 0;
 
-    FILE *output = fopen("assembled.bin", "wb");
+    FILE *output = fopen(ass->output_name, "wb");
 
     if (output == nullptr) {
         fprintf(stderr, "error: can't open file for output");
@@ -105,18 +112,182 @@ int assemble(Ass *ass) {
     fwrite(&Ass_version,                  sizeof(int), 1, output);
     fwrite(&ass->amount_of_code_strings,  sizeof(int), 1, output);
 
-    while (ncommand < ass->amount_of_code_strings) {
-        ASS_DEBUG("start %d\n", ncommand);
-        errors |= do_command(output, &ass->commands[ncommand], ass);
-        ASS_DEBUG("done  %d\n", ncommand);
-        ++ncommand;
+    errors |= first_ass_pass(ass);
+
+    if (errors != 0) {
+        return errors;
+    }
+
+    errors |= verify_markers(ass->markers, ass->amount_of_markers);
+
+    if (errors != 0) {
+        return errors;
+    }
+
+    errors |= second_ass_pass(ass, output);
+
+    if (errors != 0) {
+        return errors;
     }
 
     ASS_DEBUG("all done");
 
     fclose(output);
 
-    return errors;
+    return NO_ASS_ERR;
+}
+
+static int first_ass_pass(Ass *ass) {
+    if (ass->code == nullptr || ass->commands == nullptr) {
+        return UNEXP_NULLPTR;
+    }
+
+    ass->commands[0].cmd_ptr = &(ass->code[0]);
+
+    int ncommand = 0;
+    int  nmarker = 0;
+    size_t  nsym = 0;
+
+    size_t position_in_assembled_code = 3 * sizeof(int);
+
+    while (ncommand < ass->amount_of_code_strings && 
+            nmarker < ass->amount_of_code_strings &&
+               nsym < ass->amount_of_code_symbols) {
+
+        int cmd_len = 0;
+
+        ASS_DEBUG("start\n");
+
+        nsym += skip_spaces(ass->code + nsym);
+
+        ASS_DEBUG("index after skipping spaces: %zu\n", nsym);
+
+        nsym += skip_comment(ass->code + nsym);
+
+        ASS_DEBUG("number of line %d first valuable sym: %lld\n",
+                                                 ncommand, nsym);
+
+        if (ass->code[nsym] == ':') { //string is a marker
+            nsym = process_marker(ass, nsym, position_in_assembled_code, nmarker);
+
+            ASS_DEBUG("index processing marker: %zu\n", nsym);
+
+            ++nmarker;
+
+            continue;
+        }
+
+        nsym = process_command(ass, ncommand, nsym, cmd_len);
+
+        ASS_DEBUG("index after processing command: %zu\n", nsym);
+
+        parse_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
+
+        ++nsym;
+        ++ncommand;
+    }
+
+    ass->amount_of_code_strings = ncommand;
+    ass->amount_of_markers      = nmarker;
+    ass->amount_of_commands     = ncommand;
+
+    return NO_ASS_ERR;
+}
+
+static int process_marker(Ass *ass, size_t nsym, size_t position_in_assembled_code, int nmarker) {
+    ++nsym;
+            
+    ass->markers[nmarker].ptr                = &(ass->code[nsym]);
+    ass->markers[nmarker].index_in_assembled = position_in_assembled_code;
+    printf("position in asssembled code: %zu", ass->markers[nmarker].index_in_assembled);
+    ass->markers[nmarker].len               += skip_to_newline(ass->code + nsym);
+
+    nsym += ass->markers[nmarker].len;
+
+    ++nsym;
+
+    return nsym;
+}
+
+static int process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len) {
+    ASS_DEBUG("index of command first symbol: %zu. First symbol: %c\n", nsym, ass->code[nsym]);
+
+    ass->commands[ncommand].cmd_ptr = &(ass->code[nsym]);
+
+    for (; isalpha(ass->code[nsym]); ++nsym, ++cmd_len);
+
+    ASS_DEBUG("index of first space after command: %zu\n", nsym);
+
+    ass->commands[ncommand].cmd_len = cmd_len;
+
+    ASS_DEBUG("command len: %d\n", ass->commands[ncommand].cmd_len);
+
+    for (; ass->code[nsym] == ' '; ++nsym);
+
+    ASS_DEBUG("index after skipping spaces: %zu\n", nsym);
+
+    if (ass->code[nsym] == '\n' || ass->code[nsym] == '\0') { //command without arguments
+        ass->commands[ncommand].val_ptr = nullptr;
+
+        ASS_DEBUG("there is no value for this command.\n");
+
+    } else { //command with argument
+        ass->commands[ncommand].val_ptr = &(ass->code[nsym]);
+
+        ASS_DEBUG("number of value's position: %lld\n", nsym);
+    }
+
+    nsym += skip_to_newline(&ass->code[nsym]);
+
+    return nsym;
+}
+
+static int second_ass_pass(Ass *ass, FILE *output) {
+    if (ass->code == nullptr || ass->commands == nullptr) {
+        return UNEXP_NULLPTR;
+    }
+
+    for (int ncommand = 0; ncommand < ass->amount_of_commands; ++ncommand) {
+        printf("working with command number %d, command code: %d", ncommand, ass->commands[ncommand].cmd & CMD);
+        parse_command(ass,    &ass->commands[ncommand]);
+        write_command(output, &ass->commands[ncommand]);
+    }
+    
+    return NO_ASS_ERR;
+}
+
+static void write_command(FILE *output, const Command *command) {
+
+    assert(output  != nullptr);
+    assert(command != nullptr);
+
+    printf("\nstart processing command. command number: %d\n", command->cmd & CMD);
+
+    fwrite(&command->cmd, sizeof(char), 1, output);
+
+
+    if (command->cmd & VAL) {
+
+        //printf("there is a value for this command: %d\n", command->val);
+
+        fwrite(&command->val, sizeof(int), 1, output);
+    }
+
+    if (command->cmd & REG) {
+
+        //printf("there is a register for this command: %d\n", command->reg);
+
+        fwrite(&command->reg, sizeof(char), 1, output);
+    }
+
+    if (command->jump_to != 0) {
+
+        printf("there is a jump parameter for this command: %d\n", command->jump_to);
+
+        fwrite(&command->jump_to, sizeof(size_t), 1, output);
+    }
+
+    fflush(output);
 }
 
 #define DEF_CMD(name, cmd_num, args, ...)                                                          \
@@ -145,63 +316,10 @@ int assemble(Ass *ass) {
             if (errors != 0) {return errors;}                                                      \
         }                                                                                          \
                                                                                                    \
-    } else                                                                                       
-
-
-static int do_command(FILE *output, Command *command, Ass *ass) {
-
-    if (output == nullptr || command == nullptr) {
-
-        return UNEXP_NULLPTR;
-    }
-
-    int len = command->cmd_len;
-    int errors = NO_ASS_ERR;
-
-    char cmd[Max_cmd_len] = {};
-
-    memcpy(cmd, command->cmd_ptr, len);
-
-    cmd[len] = '\0';
-
-    command->cmd = 0;
-    command->val = 0;
-    command->reg = 0;
-
-    #include "../Common/commands.hpp"
-    {
-        fprintf(stderr, "invalid command\n");
-
-        return INCORRECT_CMD;
-    }
-
-
-    fwrite(&command->cmd, sizeof(char), 1, output);
-
-
-    if (command->cmd & VAL) {
-
-        fwrite(&command->val, sizeof(int), 1, output);
-    }
-
-    if (command->cmd & REG) {
-
-        fwrite(&command->reg, sizeof(char), 1, output);
-    }
-
-    if (command->jump_to != 0) {
-
-        fwrite(&command->jump_to, sizeof(size_t), 1, output);
-    }
-
-    fflush(output);
-    fflush(stderr);
-
-    return errors;
-}
+    } else
 
 static int parse_command(Ass *ass, Command *command, size_t *index_in_assembled_code) {
-    if (ass == nullptr || index_in_assembled_code == nullptr) {
+    if (ass == nullptr || command == nullptr) {
         return UNEXP_NULLPTR;
     }
 
@@ -238,7 +356,10 @@ static int parse_command(Ass *ass, Command *command, size_t *index_in_assembled_
         cmd_size += sizeof(char);
     }
 
-    *index_in_assembled_code += cmd_size;
+    if (index_in_assembled_code != nullptr) {
+
+        *index_in_assembled_code += cmd_size;
+    }
     
     return errors;
 }
@@ -403,103 +524,27 @@ static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
 
     for (int nmarker = 0; nmarker < ass->amount_of_markers; ++nmarker) {
 
-        if (strncasecmp(ass->markers[nmarker].ptr, command->val_ptr, ass->markers[nmarker].len) == 0) {
+        if (strncasecmp(ass->markers[nmarker].ptr, command->val_ptr, 
+                                    ass->markers[nmarker].len) == 0) {
 
             command->jump_to = ass->markers[nmarker].index_in_assembled;
+
+            printf("%zu", command->jump_to);
             
             break;
         }
     }
 
     if (command->jump_to == 0) {
+        printf("there is not matching marker\n");
         return JMP_TO_NONEXS_MARK;
     }
 
     return NO_ASS_ERR;
 }
 
-int place_pointers(Ass *ass) {
-    if (ass->code == nullptr || ass->commands == nullptr) {
-        return UNEXP_NULLPTR;
-    }
 
-    ass->commands[0].cmd_ptr = &(ass->code[0]);
-
-    int ncommand = 0;
-    int  nmarker = 0;
-    size_t  nsym = 0;
-
-    size_t position_in_assembled_code = 3 * sizeof(int);
-
-    while (ncommand < ass->amount_of_code_strings && 
-            nmarker < ass->amount_of_code_strings &&
-               nsym < ass->amount_of_code_symbols) {
-
-        int cmd_len = 0;
-
-        ASS_DEBUG("start\n");
-
-        nsym += skip_spaces(ass->code + nsym);
-
-        nsym += skip_comment(ass->code + nsym);
-
-        ASS_DEBUG("number of command %d first sym: %lld. First symbol: %c\n", ncommand, nsym, ass->code[nsym]);
-
-        if (ass->code[nsym] == ':') { //string is a marker
-            ++nsym;
-            
-            ass->markers[nmarker].ptr     = &(ass->code[nsym]);
-            ass->markers[nmarker].nstring = ncommand + 1;
-
-            ass->markers[nmarker].index_in_assembled = position_in_assembled_code;
-
-            ass->markers[nmarker].len += skip_to_newline(ass->code + nsym);
-
-            nsym += ass->markers[nmarker].len;
-
-            ++nsym;
-            ++nmarker;
-
-            continue;
-        }
-
-        ass->commands[ncommand].cmd_ptr = &(ass->code[nsym]);
-
-        for (; isalpha(ass->code[nsym]); ++nsym, ++cmd_len); //string is a command
-
-        ass->commands[ncommand].cmd_len = cmd_len;
-
-        for (; ass->code[nsym] == ' '; ++nsym);
-
-        if (ass->code[nsym] == '\n' || ass->code[nsym] == '\0') { //command without arguments
-            ass->commands[ncommand].val_ptr = nullptr;
-
-            ++nsym;
-            ++ncommand;
-
-            ASS_DEBUG("there is no value for this command.\n");
-
-            continue;
-        }
-
-        ass->commands[ncommand].val_ptr = &(ass->code[nsym]); //command with argument
-        ASS_DEBUG("number of value's position: %lld\n", nsym);
-
-        parse_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
-
-        nsym += skip_to_newline(&ass->code[nsym]);
-
-        ++nsym;
-        ++ncommand;
-    }
-
-    ass->amount_of_code_strings = ncommand;
-    ass->amount_of_markers      = nmarker;
-
-    return ncommand;
-}
-
-int verify_markers(const Marker *markers, int amount_of_markers) {
+static int verify_markers(const Marker *markers, int amount_of_markers) {
     assert(markers != nullptr && "nullptr to markers");
 
     /*verify pointers*/

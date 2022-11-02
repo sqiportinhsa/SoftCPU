@@ -17,13 +17,11 @@ int main(int argc, const char **argv) {
     Ass ass = {};
 
 
-    errors |= ass_constructor(&ass, args.input);
+    errors |= ass_constructor(&ass, &args);
 
     if (errors != 0) {
         return -1;
     }
-
-    errors |= verify_markers(ass.markers, ass.amount_of_markers);
 
     errors |= assemble(&ass);
 

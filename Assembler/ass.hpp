@@ -7,7 +7,7 @@
 
 #include "../Common/file_reading.hpp"
 
-#define DEBUG_ASS
+//#define DEBUG_ASS
 
 const int Ass_version = 3;
 const int Max_cmd_len = 5;
@@ -39,18 +39,20 @@ struct Command {
 
 struct Marker {
     char*  ptr                = nullptr;
-    int    nstring            = 0;
     int    len                = 0;
     size_t index_in_assembled = 0;
 };
 
 struct Ass {
-    Command* commands;
-    Marker*  markers;
-    char*    code;
-    size_t   amount_of_code_symbols;
-    int      amount_of_code_strings;
-    int      amount_of_markers;
+    Command*     commands;
+    Marker*      markers;
+    char*        code;
+    size_t       amount_of_code_symbols;
+    int          amount_of_code_strings;
+    int          amount_of_commands;
+    int          amount_of_markers;
+    const char*  input_name;
+    const char*  output_name;
 };
 
 enum Register {
@@ -82,13 +84,9 @@ enum AssErrors {
 
 CLArgs cmd_line_args(int argc, const char **argv);
 
-int ass_constructor(Ass *ass, const char *filename);
+int ass_constructor(Ass *ass, CLArgs *args);
 
 int assemble(Ass *ass);
-
-int place_pointers(Ass *ass);
-
-int verify_markers(const Marker *markers, int amount_of_markers);
 
 void free_ass(Ass *ass);
 
