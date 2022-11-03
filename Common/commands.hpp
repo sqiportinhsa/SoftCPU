@@ -93,6 +93,11 @@ DEF_CMD(RET, 16, NO_ARGS, {
     cpu->ip = StackPop(cpu->adr_stack, &cpu->stk_err);
 })
 
+DEF_CMD(IN, 17, NO_ARGS, {
+    scanf("%d", &val_for_push);
+    cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
+})
+
 
 #undef No_args
 #undef Standart_args
