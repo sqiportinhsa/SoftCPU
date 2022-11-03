@@ -15,8 +15,6 @@
 int calculate(CPU *cpu) {
     int cpu_err   = NO_CPU_ERR;
 
-    printf("code len: %zu\n", cpu->code_len);
-
     while (cpu->ip < cpu->code_len) {
         dump_cpu(cpu, GetLogStream());
 
@@ -54,14 +52,40 @@ int calculate(CPU *cpu) {
         if (cpu->stk_err != 0) {
             cpu_err |= STACK_ERR;
         }
-
-        printf("ip after itteration %zu\n", cpu->ip);
     }
 
     return cpu_err;
 }
 
 #undef DEF_CMD
+
+bool binary_verification(CPU *cpu) {
+    cpu->verification_const = *((int*) (cpu->code + cpu->ip));
+    cpu->ip += sizeof(int);
+    
+    if (cpu->verification_const != Verification_const) {
+        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match.\n");
+        return false;
+    }
+
+    cpu->ass_version = *((int*) (cpu->code + cpu->ip));
+    cpu->ip += sizeof(int);
+
+    if (cpu->ass_version > Proc_version) {
+        fprintf(stderr, "Error: processor version is less than assembler version\n");
+        return false;
+    }
+
+    return true;
+}
+
+#define allocate_memory(pointer, type, amount)                                  \
+        pointer = (type*) calloc(amount, sizeof(type));                         \
+        if (pointer == nullptr) {                                               \
+            fprintf(stderr, "error: not enought memory in CPU constructor\n");  \
+            CPU_destructor(cpu);                                                \
+            return MEMORY_EXC;                                                  \
+        }
 
 int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, const char* file) {
     if (cpu == nullptr) {
@@ -72,28 +96,19 @@ int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, 
     cpu->logs      = nullptr;
     cpu->code      = nullptr;
 
-    cpu->cpu_stack = (Stack*) calloc(1, sizeof(Stack));
-    if (cpu->cpu_stack == nullptr) {
-        fprintf(stderr, "error: not enought memory for stack in CPU constructor\n");
-        CPU_destructor(cpu);
-        return MEMORY_EXC;
-    }
+
+    allocate_memory(cpu->cpu_stack, Stack, 1);
 
     StackCtr(cpu->cpu_stack, 0);
 
-    cpu->code = (char*) calloc(code_len, sizeof(char));
-    if (cpu->code == nullptr) {
-        fprintf(stderr, "error: not enougth memory for code in CPU constructor\n");
-        CPU_destructor(cpu);
-        return MEMORY_EXC;
-    }
+    allocate_memory(cpu->adr_stack, Stack, 1);
 
-    cpu->logs = (CPU_logs*) calloc(1, sizeof(CPU_logs));
-    if (cpu->logs == nullptr) {
-        fprintf(stderr, "error: not enougth memory for logs in CPU constructor\n");
-        CPU_destructor(cpu);
-        return MEMORY_EXC;
-    }
+    StackCtr(cpu->adr_stack, 0);
+
+    allocate_memory(cpu->code, char, code_len);
+
+    allocate_memory(cpu->logs, CPU_logs, 1);
+
 
     cpu->logs->line_of_creation = line;
     cpu->logs->file_of_creation = file;
@@ -112,10 +127,12 @@ int CPU_destructor(CPU *cpu) {
     free(cpu->code);
     free(cpu->cpu_stack);
     free(cpu->logs);
+    free(cpu->adr_stack);
 
     cpu->code       = nullptr;
     cpu->cpu_stack  = nullptr;
     cpu->logs       = nullptr;
+    cpu->adr_stack  = nullptr;
 
     cpu->amount_of_cmds = 0;
     cpu->code_len       = 0;
