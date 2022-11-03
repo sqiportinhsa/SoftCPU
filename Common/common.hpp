@@ -15,10 +15,10 @@ typedef enum {
 #undef DEF_CMD
 
 typedef enum {
-    CMD  =  1 | (1 << 1) | (1 << 2) | (1 << 3),
-    VAL  =  1 << 4,
-    REG  =  1 << 5,
-    RAM  =  1 << 6,
+    CMD  =  1 | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
+    VAL  =  1 << 5,
+    REG  =  1 << 6,
+    RAM  =  1 << 7,
 } Arg_bytes;
 
 #endif
