@@ -1,11 +1,17 @@
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "processor.hpp"
 #include "../Common/file_reading.hpp"
 #include "../Stack/stack.h"
 #include "../Stack/stack_logs.h"
 #include "../Stack/stack_verification.h"
+
+static const char* get_input_filename(int argc, const char **argv);
+static void get_amount_of_cmds(CPU *cpu);
+static bool binary_verification(CPU *cpu);
+
 
 #define DEF_CMD(name, val, args, ...) \
     case val:                         \
@@ -59,7 +65,53 @@ int calculate(CPU *cpu) {
 
 #undef DEF_CMD
 
-bool binary_verification(CPU *cpu) {
+int prepare_cpu(CPU *cpu, int argc, const char **argv) {
+    int errors = NO_CPU_ERR;
+
+    const char *input_filename = get_input_filename(argc, argv);
+
+    size_t code_len = count_elements_in_file(input_filename);
+
+    errors != CPU_constructor(cpu, code_len);
+
+    if (errors) {
+        return errors;
+    }
+
+    cpu->code_len = read_file(cpu->code, cpu->code_len, input_filename);
+
+    if (!binary_verification(cpu)) {
+        return INCORR_BINARY;
+    }
+
+    get_amount_of_cmds(cpu);
+
+    return NO_CPU_ERR;
+    
+}
+
+static const char* get_input_filename(int argc, const char **argv) {
+
+    assert(argv != nullptr);
+
+    CLArgs clargs = parse_cmd_line(argc, argv);
+
+    if (clargs.input == nullptr) {
+        clargs.input = default_input;
+    }
+
+    return clargs.input; 
+}
+
+static void get_amount_of_cmds(CPU *cpu) {
+    assert(cpu       != nullptr);
+    assert(cpu->code != nullptr);
+
+    cpu->amount_of_cmds = *((int*) (cpu->code + cpu->ip));
+    cpu->ip += sizeof(int);
+}
+
+static bool binary_verification(CPU *cpu) {
     cpu->verification_const = *((int*) (cpu->code + cpu->ip));
     cpu->ip += sizeof(int);
     
