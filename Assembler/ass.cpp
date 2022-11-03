@@ -160,7 +160,7 @@ static int first_ass_pass(Ass *ass) {
 
         ASS_DEBUG("start\n");
 
-        nsym += skip_spaces(ass->code + nsym);
+        nsym += skip_spaces_and_void_lines(ass->code + nsym);
 
         ASS_DEBUG("index after skipping spaces: %zu\n", nsym);
 
@@ -518,8 +518,10 @@ static int parse_for_push(Command *command, int cmd_num) {
 }
 
 static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
-    assert (command != nullptr);
-    assert (ass     != nullptr);
+    assert (command          != nullptr);
+    assert (ass              != nullptr);
+    assert (ass->markers     != nullptr);
+    assert (command->val_ptr != nullptr);
 
     command->cmd  = (char) cmd_num;
     command->cmd |= VAL;
