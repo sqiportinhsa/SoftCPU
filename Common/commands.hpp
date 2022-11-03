@@ -30,16 +30,24 @@ DEF_CMD(MUL, 3, NO_ARGS, {
 
 DEF_CMD(SUB, 4, NO_ARGS, {
     first__popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
+    if (cpu->stk_err != 0) {
+        return cpu_err | STACK_ERR;
+    }
+
     cpu->stk_err  |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first__popped);
 })
 
 DEF_CMD(DIV, 5, NO_ARGS, {
     first__popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
+    if (cpu->stk_err != 0) {
+        return cpu_err | STACK_ERR;
+    }
+
     cpu->stk_err  |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first__popped);
 })
 
 DEF_CMD(OUT, 6, NO_ARGS, {
-    printf("result: %d", StackPop(cpu->cpu_stack, &cpu->stk_err));
+    printf("result: %d\n", StackPop(cpu->cpu_stack, &cpu->stk_err));
 })
 
 DEF_CMD(POP, 7, POP__ARGS, {
@@ -75,6 +83,15 @@ DEF_JMP_IF(JE,  13, ==)
 DEF_JMP_IF(JNE, 14, !=)
 
 #undef DEF_JMP_IF
+
+DEF_CMD(CALL, 15, JUMP_ARGS, {
+    StackPush(cpu->adr_stack, cpu->ip);
+    cpu->ip = *((int *) (cpu->code + cpu->ip) - 1) + 1;
+})
+
+DEF_CMD(RET, 16, NO_ARGS, {
+    cpu->ip = StackPop(cpu->adr_stack, &cpu->stk_err);
+})
 
 
 #undef No_args
