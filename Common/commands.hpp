@@ -62,7 +62,7 @@ DEF_CMD(POP, 7, POP__ARGS, {
 })
 
 DEF_CMD(JMP, 8, JUMP_ARGS, {
-    cpu->ip = *((int *) (cpu->code + cpu->ip) - 1);
+    cpu->ip = *((int *) (cpu->code + cpu->ip) - 1) + 1;
 })
 
 #define DEF_JMP_IF(name, cmd_num, oper)                                \
@@ -71,7 +71,7 @@ DEF_CMD(JMP, 8, JUMP_ARGS, {
             second_popped = StackPop (cpu->cpu_stack, &cpu->stk_err);  \
                                                                        \
             if (first__popped oper second_popped) {                    \
-                cpu->ip = *((int *) (cpu->code + cpu->ip) - 1);        \
+                cpu->ip = *((int *) (cpu->code + cpu->ip) - 1) + 1;    \
             }                                                          \
         })
 
