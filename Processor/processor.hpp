@@ -2,7 +2,6 @@
 #define PROCESSOR
 
 #include "../Common/common.hpp"
-#include "../Common/utils.hpp"
 #include "../Stack/stack.h"
 
 const int Proc_version   = 3;
@@ -19,6 +18,7 @@ struct CPU {
     CPU_logs* logs                  = nullptr;
     char*     code                  = nullptr;
     Stack*    cpu_stack             = nullptr;
+    Stack*    adr_stack             = nullptr;
     size_t    ip                    = 0;
     size_t    code_len              = 0;
     int       amount_of_cmds        = 0;
@@ -42,6 +42,8 @@ enum CPU_errors {
                                                             __PRETTY_FUNCTION__, __FILE__)
 
 #define dump_cpu(cpu, logfile) real_dump_cpu(cpu, logfile, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+
+bool binary_verification(CPU *cpu);
 
 int calculate(CPU *cpu);
 

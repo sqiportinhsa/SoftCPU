@@ -19,30 +19,12 @@ int main() {
 
     cpu.code_len = read_file(cpu.code, cpu.code_len, "assembled.bin");
 
-    cpu.verification_const = *((int*) (cpu.code + cpu.ip));
-    cpu.ip += sizeof(int);
-    
-    if (cpu.verification_const != Verification_const) {
-        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match.\n");
-        return -1;
-    }
-
-    cpu.ass_version = *((int*) (cpu.code + cpu.ip));
-    cpu.ip += sizeof(int);
-
-    if (cpu.ass_version > Proc_version) {
-        fprintf(stderr, "Error: processor version is less than assembler version\n");
+    if (!binary_verification(&cpu)) {
         return -1;
     }
 
     cpu.amount_of_cmds = *((int*) (cpu.code + cpu.ip));
     cpu.ip += sizeof(int);
-
-    //printf("%d %d\n", cpu.ass_version, cpu.amount_of_cmds);
-
-    /*for(size_t i = 0; i < cpu.code_len; ++i) {
-        fprintf(stderr, "<%d>", cpu.code[i]);
-    }*/
 
     errors |= calculate(&cpu);
 
