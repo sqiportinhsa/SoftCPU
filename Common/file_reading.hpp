@@ -24,4 +24,6 @@ size_t skip_spaces(char  *pointer);
 void   skip_to_newline(char **pointer);
 size_t skip_to_newline(char *pointer);
 
+size_t skip_spaces_and_void_lines(char *pointer);
+
 #endif

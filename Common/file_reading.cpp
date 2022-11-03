@@ -127,3 +127,13 @@ size_t skip_to_newline(char *pointer) {
 
     return i;
 }
+
+size_t skip_spaces_and_void_lines(char *pointer) {
+    assert (pointer != nullptr && "pointer is nullptr");
+
+    size_t i = 0;
+
+    for (; *(pointer + i) == '\n' || *(pointer + i) == ' '; ++i);
+
+    return i;
+}
