@@ -98,6 +98,16 @@ DEF_CMD(IN, 17, NO_ARGS, {
     cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
 })
 
+DEF_CMD(SQRT, 18, NO_ARGS, {
+    first__popped  = StackPop(cpu->cpu_stack, &cpu->stk_err);
+    if (cpu->stk_err != 0) {
+        return cpu_err | STACK_ERR;
+    }
+
+    val_for_push  = (int) sqrt((double) first__popped);
+    cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
+})
+
 
 #undef No_args
 #undef Standart_args
