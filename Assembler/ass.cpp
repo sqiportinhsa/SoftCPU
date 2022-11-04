@@ -604,7 +604,8 @@ static int get_args_with_first_reg(Command *command, int *shift) {
             *(command->val_ptr + *shift) != ']') {
 
             if (*(command->val_ptr + *shift) != '+') {
-                fprintf(stderr, "incorrect push arguments: invalid symbol after register\n");
+                fprintf(stderr, "incorrect push arguments: invalid symbol '%c' aka '%d' after register\n", *(command->val_ptr + *shift), *(command->val_ptr + *shift));
+
                 errors |= UNIDENTIF_SYM;
                 return errors;
             }
