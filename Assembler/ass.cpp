@@ -124,7 +124,7 @@ int assemble(Ass *ass) {
         return errors;
     }
 
-    printf("\n\n--------------------------------------------------\n\n");
+    fprintf(stderr, "\n\n--------------------------------------------------\n\n");
 
     errors |= second_ass_pass(ass, output);
 
@@ -183,11 +183,11 @@ static int first_ass_pass(Ass *ass) {
 
         ASS_DEBUG("index after processing command: %zu\n", nsym);
 
-        printf("parsing command %d. pos in assembled before: %d\n", ncommand, position_in_assembled_code);
+        fprintf(stderr, "parsing command %d. pos in assembled before: %d\n", ncommand, position_in_assembled_code);
 
         parse_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
 
-        printf("parsing command %d. pos in assembled after : %d\n", ncommand, position_in_assembled_code);
+        fprintf(stderr, "parsing command %d. pos in assembled after : %d\n", ncommand, position_in_assembled_code);
 
         ++nsym;
         ++ncommand;
@@ -205,7 +205,7 @@ static int process_marker(Ass *ass, size_t nsym, int position_in_assembled_code,
             
     ass->markers[nmarker].ptr                = &(ass->code[nsym]);
     ass->markers[nmarker].index_in_assembled = position_in_assembled_code;
-    printf("position in asssembled code: %zu\n", ass->markers[nmarker].index_in_assembled);
+    fprintf(stderr, "position in asssembled code: %zu\n", ass->markers[nmarker].index_in_assembled);
     ass->markers[nmarker].len               += skip_to_newline(ass->code + nsym);
 
     nsym += ass->markers[nmarker].len;
@@ -254,7 +254,7 @@ static int second_ass_pass(Ass *ass, FILE *output) {
     }
 
     for (int ncommand = 0; ncommand < ass->amount_of_commands; ++ncommand) {
-        printf("working with command number %d, command code: %d", ncommand, ass->commands[ncommand].cmd & CMD);
+        fprintf(stderr, "working with command number %d, command code: %d\n", ncommand, ass->commands[ncommand].cmd & CMD);
         parse_command(ass,    &ass->commands[ncommand]);
         write_command(output, &ass->commands[ncommand]);
     }
@@ -267,21 +267,21 @@ static void write_command(FILE *output, const Command *command) {
     assert(output  != nullptr);
     assert(command != nullptr);
 
-    printf("\nstart processing command. command number: %d\n", command->cmd & CMD);
+    fprintf(stderr, "\nstart processing command. command number: %d\n", command->cmd & CMD);
 
     fwrite(&command->cmd, sizeof(char), 1, output);
 
 
     if (command->cmd & VAL) {
 
-        //printf("there is a value for this command: %d\n", command->val);
+        //fprintf(stderr, "there is a value for this command: %d\n", command->val);
 
         fwrite(&command->val, sizeof(int), 1, output);
     }
 
     if (command->cmd & REG) {
 
-        //printf("there is a register for this command: %d\n", command->reg);
+        //fprintf(stderr, "there is a register for this command: %d\n", command->reg);
 
         fwrite(&command->reg, sizeof(char), 1, output);
     }
@@ -347,7 +347,7 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
 
     if (command->cmd & VAL) {
 
-        printf("added sizeof(int)\n");
+        fprintf(stderr, "added sizeof(int)\n");
 
         cmd_size += sizeof(int);
     }
@@ -387,7 +387,7 @@ static int parse_for_pop(Command *command, int cmd_num) {
     }                                                                                      
                                                                                            
     if (*(command->val_ptr + 3) == ' ' || *(command->val_ptr + 3) == '\n') {               
-                                                                                           
+                                                              
         errors |= get_args_with_first_reg(command, &shift);                                
                                                                                            
         if (errors & INCORRECT_REG) {                                                      
@@ -405,7 +405,7 @@ static int parse_for_pop(Command *command, int cmd_num) {
                                                                                            
             return errors;                                                                 
         }                                                                                  
-                                                                                           
+                                                          
         command->cmd |= REG;                                                               
                                                                                            
     } else if (*(command->val_ptr + 1) == 'a' &&                                           
@@ -464,7 +464,7 @@ static int parse_for_push(Command *command, int cmd_num) {
 
     int shift = 0;
                                                                                                    
-    if (*command->val_ptr <= '9' && *command->val_ptr > '0') {
+    if (isdigit(*command->val_ptr) || *command->val_ptr == '-') {
                                                                                                    
         errors |= get_args_with_first_val(command, &shift);
                                                                                                    
@@ -507,7 +507,7 @@ static int parse_for_push(Command *command, int cmd_num) {
                                                                                                
     } else {
 
-        fprintf(stderr, "incorrect push argument\n");
+        fprintf(stderr, "incorrect push argument, symbol '%c'\n", *command->val_ptr);
                                                                                                
         errors |= INCORRECT_ARG;
                                                                                                
@@ -533,7 +533,7 @@ static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
 
             command->val = ass->markers[nmarker].index_in_assembled;
 
-            printf("index in assembled: %d\n", command->val);
+            fprintf(stderr, "index in assembled: %d\n", command->val);
             
             break;
         }
@@ -612,7 +612,7 @@ static int get_args_with_first_reg(Command *command, int *shift) {
             ++(*shift);
             *shift += skip_spaces(command->val_ptr + *shift);
 
-            if (*(command->val_ptr + *shift) > '0' && *(command->val_ptr + *shift) <= '9') {
+            if (isdigit(*(command->val_ptr + *shift)) || *(command->val_ptr + *shift) == '-') {
                 *shift += get_val(command->val_ptr + *shift, &command->val);
                 command->cmd |= VAL;
 
@@ -630,9 +630,10 @@ static int get_args_with_first_reg(Command *command, int *shift) {
 static int get_args_with_first_val(Command *command, int *shift) {
     int errors = NO_ASS_ERR;
 
-    if (*(command->val_ptr + *shift) <= '9' && *(command->val_ptr + *shift) > '0') {
+    if (isdigit(*(command->val_ptr + *shift)) || *(command->val_ptr + *shift) == '-') {
+
         *shift += get_val(command->val_ptr + *shift, &command->val);
-        *shift += skip_spaces(command->val_ptr + *shift + *shift);
+        *shift += skip_spaces(command->val_ptr + *shift);
 
         command->cmd |= VAL;
 
@@ -641,7 +642,7 @@ static int get_args_with_first_val(Command *command, int *shift) {
             *(command->val_ptr + *shift) != ']') {
 
             if (*(command->val_ptr + *shift) != '+') {
-                fprintf(stderr, "incorrect push arguments: unexpected symbol after value\n");
+                fprintf(stderr, "incorrect push arguments: unexpected symbol '%c' aka '%d' after value\n", *(command->val_ptr + *shift), *(command->val_ptr + *shift));
                 errors |= UNIDENTIF_SYM;
                 return errors;
             }

@@ -88,11 +88,9 @@ int get_val(char *ptr_to_first_elem, int *ptr_to_val) {
 
     int val_len = 0;
 
-    for (; *(ptr_to_first_elem + val_len) >= '0' && 
-           *(ptr_to_first_elem + val_len) <= '9'; ++val_len) {
+    sscanf(ptr_to_first_elem, "%d%n", ptr_to_val, &val_len);
 
-        *ptr_to_val = *ptr_to_val*10 + (*(ptr_to_first_elem + val_len) - '0');
-    }
+    fprintf (stderr, "Got %d\n", *ptr_to_val);
 
     return val_len;
 }
