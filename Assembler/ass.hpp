@@ -12,7 +12,7 @@
 const int Ass_version = 3;
 const int Max_cmd_len = 5;
 
-static const char *default_input_filename  = "input.txt";
+static const char *default_input_filename  = "input.asm";
 static const char *default_output_filename = "output.bin";
 
 #ifdef DEBUG_ASS
