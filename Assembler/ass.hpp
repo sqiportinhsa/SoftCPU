@@ -7,8 +7,6 @@
 
 #include "../Common/file_reading.hpp"
 
-#define DEBUG_ASS
-
 const int Ass_version = 3;
 const int Max_cmd_len = 5;
 
