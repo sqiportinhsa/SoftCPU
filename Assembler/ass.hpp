@@ -20,7 +20,7 @@ static const char *default_output_filename = "output.bin";
 #endif
 
 #define RETURN_IF(errors)                                                              \
-        if (errrors != 0) {                                                            \
+        if (errors != 0) {                                                             \
             fprintf(stderr, "Error: can't compile code. Stop. Errors: %d.\n", errors); \
             return -1;                                                                 \
         }

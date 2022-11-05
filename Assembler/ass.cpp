@@ -12,8 +12,8 @@ static Register get_reg_num(char *ptr);
 static int first_ass_pass(Ass *ass);
 static int second_ass_pass(Ass *ass, FILE *output);
 
-static int process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker);
-static int process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len);
+static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker);
+static size_t process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len);
 
 static void write_command(FILE *output, const Command *command);
 
@@ -114,23 +114,17 @@ int assemble(Ass *ass) {
 
     errors |= first_ass_pass(ass);
 
-    if (errors != 0) {
-        return errors;
-    }
+    RETURN_IF(errors);
 
     errors |= verify_markers(ass->markers, ass->amount_of_markers);
 
-    if (errors != 0) {
-        return errors;
-    }
+    RETURN_IF(errors);
 
     ASS_DEBUG("\n\n--------------------------------------------------\n\n");
 
     errors |= second_ass_pass(ass, output);
 
-    if (errors != 0) {
-        return errors;
-    }
+    RETURN_IF(errors);
 
     ASS_DEBUG("all done");
 
@@ -146,6 +140,7 @@ static int first_ass_pass(Ass *ass) {
 
     ass->commands[0].cmd_ptr = &(ass->code[0]);
 
+    int errors   = 0;
     int ncommand = 0;
     int  nmarker = 0;
     size_t  nsym = 0;
@@ -185,7 +180,9 @@ static int first_ass_pass(Ass *ass) {
 
         ASS_DEBUG("parsing command %d. pos in assembled before: %d\n", ncommand, position_in_assembled_code);
 
-        parse_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
+        errors |= parse_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
+        
+        RETURN_IF(errors);
 
         ASS_DEBUG("parsing command %d. pos in assembled after : %d\n", ncommand, position_in_assembled_code);
 
@@ -200,13 +197,12 @@ static int first_ass_pass(Ass *ass) {
     return NO_ASS_ERR;
 }
 
-static int process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker) {
+static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker) {
     ++nsym;
             
     ass->markers[nmarker].ptr                = &(ass->code[nsym]);
     ass->markers[nmarker].index_in_assembled = position_in_assembled_code;
-    ASS_DEBUG("position in asssembled code: %zu\n", ass->markers[nmarker].index_in_assembled);
-    ass->markers[nmarker].len               += skip_to_newline(ass->code + nsym);
+    ass->markers[nmarker].len               += (unsigned int) skip_to_newline(ass->code + nsym);
 
     nsym += ass->markers[nmarker].len;
 
@@ -215,7 +211,7 @@ static int process_marker(Ass *ass, size_t nsym, int position_in_assembled_code,
     return nsym;
 }
 
-static int process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len) {
+static size_t process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len) {
     ASS_DEBUG("index of command first symbol: %zu. First symbol: %c\n", nsym, ass->code[nsym]);
 
     ass->commands[ncommand].cmd_ptr = &(ass->code[nsym]);
@@ -296,6 +292,8 @@ static void write_command(FILE *output, const Command *command) {
                                                                                                    \
             command->cmd = cmd_num;                                                                \
                                                                                                    \
+            if (command->val_ptr != nullptr) {return UNEXPEC_ARG;}                                 \
+                                                                                                   \
         } else if (args == POP__ARGS) {                                                            \
                                                                                                    \
             errors |= parse_for_pop(command, cmd_num);                                             \
@@ -349,12 +347,12 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
 
         ASS_DEBUG("added sizeof(int)\n");
 
-        cmd_size += sizeof(int);
+        cmd_size += (int) sizeof(int);
     }
 
     if (command->cmd & REG) {
 
-        cmd_size += sizeof(char);
+        cmd_size += (int) sizeof(char);
     }
 
     if (index_in_assembled_code != nullptr) {
@@ -443,7 +441,7 @@ static int parse_for_pop(Command *command, int cmd_num) {
             return errors;
         }
                                                                                            
-        command->cmd |= RAM;
+        command->cmd |= (char) RAM;
     }
 
     return errors;
@@ -503,7 +501,7 @@ static int parse_for_push(Command *command, int cmd_num) {
             return errors;
         }
                                                                                                
-        command->cmd |= RAM;
+        command->cmd |= (char) RAM;
                                                                                                
     } else {
 
@@ -597,7 +595,7 @@ static int get_args_with_first_reg(Command *command, int *shift) {
         command->cmd |= REG;
 
         *shift += 3;
-        *shift += skip_spaces(command->val_ptr + *shift);
+        *shift += (int) skip_spaces(command->val_ptr + *shift);
 
         if (*(command->val_ptr + *shift) != '\n' && 
             *(command->val_ptr + *shift) != ';'  &&
@@ -611,7 +609,7 @@ static int get_args_with_first_reg(Command *command, int *shift) {
             }
 
             ++(*shift);
-            *shift += skip_spaces(command->val_ptr + *shift);
+            *shift += (int) skip_spaces(command->val_ptr + *shift);
 
             if (isdigit(*(command->val_ptr + *shift)) || *(command->val_ptr + *shift) == '-') {
                 *shift += get_val(command->val_ptr + *shift, &command->val);
@@ -634,7 +632,7 @@ static int get_args_with_first_val(Command *command, int *shift) {
     if (isdigit(*(command->val_ptr + *shift)) || *(command->val_ptr + *shift) == '-') {
 
         *shift += get_val(command->val_ptr + *shift, &command->val);
-        *shift += skip_spaces(command->val_ptr + *shift);
+        *shift += (int) skip_spaces(command->val_ptr + *shift);
 
         command->cmd |= VAL;
 
@@ -649,7 +647,7 @@ static int get_args_with_first_val(Command *command, int *shift) {
             }
 
             ++(*shift);
-            *shift += skip_spaces(command->val_ptr + *shift);
+            *shift += (int) skip_spaces(command->val_ptr + *shift);
 
             command->reg = get_reg_num(command->val_ptr + *shift);
             if (command->reg == -1) {
