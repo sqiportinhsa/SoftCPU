@@ -124,7 +124,7 @@ int assemble(Ass *ass) {
         return errors;
     }
 
-    fprintf(stderr, "\n\n--------------------------------------------------\n\n");
+    ASS_DEBUG("\n\n--------------------------------------------------\n\n");
 
     errors |= second_ass_pass(ass, output);
 
@@ -183,11 +183,11 @@ static int first_ass_pass(Ass *ass) {
 
         ASS_DEBUG("index after processing command: %zu\n", nsym);
 
-        fprintf(stderr, "parsing command %d. pos in assembled before: %d\n", ncommand, position_in_assembled_code);
+        ASS_DEBUG("parsing command %d. pos in assembled before: %d\n", ncommand, position_in_assembled_code);
 
         parse_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
 
-        fprintf(stderr, "parsing command %d. pos in assembled after : %d\n", ncommand, position_in_assembled_code);
+        ASS_DEBUG("parsing command %d. pos in assembled after : %d\n", ncommand, position_in_assembled_code);
 
         ++nsym;
         ++ncommand;
@@ -205,7 +205,7 @@ static int process_marker(Ass *ass, size_t nsym, int position_in_assembled_code,
             
     ass->markers[nmarker].ptr                = &(ass->code[nsym]);
     ass->markers[nmarker].index_in_assembled = position_in_assembled_code;
-    fprintf(stderr, "position in asssembled code: %zu\n", ass->markers[nmarker].index_in_assembled);
+    ASS_DEBUG("position in asssembled code: %zu\n", ass->markers[nmarker].index_in_assembled);
     ass->markers[nmarker].len               += skip_to_newline(ass->code + nsym);
 
     nsym += ass->markers[nmarker].len;
@@ -254,7 +254,7 @@ static int second_ass_pass(Ass *ass, FILE *output) {
     }
 
     for (int ncommand = 0; ncommand < ass->amount_of_commands; ++ncommand) {
-        fprintf(stderr, "working with command number %d, command code: %d\n", ncommand, ass->commands[ncommand].cmd & CMD);
+        ASS_DEBUG("working with command number %d, command code: %d\n", ncommand, ass->commands[ncommand].cmd & CMD);
         parse_command(ass,    &ass->commands[ncommand]);
         write_command(output, &ass->commands[ncommand]);
     }
@@ -267,21 +267,21 @@ static void write_command(FILE *output, const Command *command) {
     assert(output  != nullptr);
     assert(command != nullptr);
 
-    fprintf(stderr, "\nstart processing command. command number: %d\n", command->cmd & CMD);
+    ASS_DEBUG("\nstart processing command. command number: %d\n", command->cmd & CMD);
 
     fwrite(&command->cmd, sizeof(char), 1, output);
 
 
     if (command->cmd & VAL) {
 
-        //fprintf(stderr, "there is a value for this command: %d\n", command->val);
+        ASS_DEBUG("there is a value for this command: %d\n", command->val);
 
         fwrite(&command->val, sizeof(int), 1, output);
     }
 
     if (command->cmd & REG) {
 
-        //fprintf(stderr, "there is a register for this command: %d\n", command->reg);
+        ASS_DEBUG("there is a register for this command: %d\n", command->reg);
 
         fwrite(&command->reg, sizeof(char), 1, output);
     }
@@ -347,7 +347,7 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
 
     if (command->cmd & VAL) {
 
-        fprintf(stderr, "added sizeof(int)\n");
+        ASS_DEBUG("added sizeof(int)\n");
 
         cmd_size += sizeof(int);
     }
@@ -533,7 +533,7 @@ static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
 
             command->val = ass->markers[nmarker].index_in_assembled;
 
-            fprintf(stderr, "index in assembled: %d\n", command->val);
+            ASS_DEBUG("index in assembled: %d\n", command->val);
             
             break;
         }
@@ -559,7 +559,7 @@ static int verify_markers(const Marker *markers, int amount_of_markers) {
     for (int i = 0; i < amount_of_markers; ++i) {
         for (int j = i + 1; j < amount_of_markers; ++j) {
             if (markers[i].len == markers[j].len) {
-                if (strncasecmp(markers[i].ptr, markers[j].ptr, markers[i].len) == 0) {
+                if (strncmp(markers[i].ptr, markers[j].ptr, markers[i].len) == 0) {
                     return SAME_MARKERS;
                 }
             }
