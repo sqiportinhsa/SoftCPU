@@ -16,10 +16,10 @@ out
 in
 sqrt
 out
-jmp love_foxidokun
+jmp i_love_foxidokun
 hlt
 
-:love_foxidokun
+:i_love_foxidokun
 PUSH 10
 PUSH 20
 POP rax
@@ -35,4 +35,4 @@ HLT
 :1
 PUSH 228
 OUT
-JMP abcd
+JMP aBcd
