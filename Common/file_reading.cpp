@@ -90,8 +90,6 @@ int get_val(char *ptr_to_first_elem, int *ptr_to_val) {
 
     sscanf(ptr_to_first_elem, "%d%n", ptr_to_val, &val_len);
 
-    fprintf (stderr, "Got %d\n", *ptr_to_val);
-
     return val_len;
 }
 
