@@ -25,10 +25,15 @@ static int parse_for_pop  (Command *command, int cmd_num);
 static int parse_for_push (Command *command, int cmd_num);
 static int parse_for_jump (Command *command, int cmd_num, Ass *ass);
 
+static int get_ram_arg(Command *command, int shift);
+
 static int get_args_with_first_reg(Command *command, int *shift);
 static int get_args_with_first_val(Command *command, int *shift);
 
 static size_t skip_comment(char *pointer);
+
+const char *default_input_filename  = "input.asm";
+const char *default_output_filename = "output.bin";
 
 
 CLArgs cmd_line_args(int argc, const char **argv) {
@@ -380,29 +385,21 @@ static int parse_for_pop(Command *command, int cmd_num) {
     int shift = 0;                                                                         
                                                                                            
     if (*command->val_ptr != 'r') {                                                        
-        fprintf(stderr, "incorrect pop argument: register or ram expected\n");             
+        fprintf(stderr, "incorrect pop argument: register or ram expected\n");    
+
         return INCORRECT_ARG;                                                              
     }                                                                                      
                                                                                            
     if (*(command->val_ptr + 3) == ' ' || *(command->val_ptr + 3) == '\n') {               
                                                               
-        errors |= get_args_with_first_reg(command, &shift);                                
-                                                                                           
-        if (errors & INCORRECT_REG) {                                                      
-                                                                                           
-            fprintf(stderr, "incorrect pop: invalid register\n");                          
-                                                                                           
-            return errors;                                                                 
-        }                                                                                  
+        errors |= get_args_with_first_reg(command, &shift);                                                                                                                
                                                                                            
         if (command->cmd & VAL) {                                                          
-                                                                                           
-            fprintf(stderr, "incorrect pop: unexpected value\n");                          
-                                                                                           
-            errors |= INCORRECT_VAL;                                                       
-                                                                                           
-            return errors;                                                                 
-        }                                                                                  
+                                     
+            errors |= INCORRECT_VAL;                                                                                                                      
+        }      
+
+        RETURN_IF(errors);                                                                            
                                                           
         command->cmd |= REG;                                                               
                                                                                            
@@ -410,36 +407,11 @@ static int parse_for_pop(Command *command, int cmd_num) {
                *(command->val_ptr + 2) == 'm' &&                                           
                *(command->val_ptr + 3) == '[') {                                           
                                                                                            
-        shift += 4;                                                                        
+        shift += (int) strlen("ram[");                                                                        
                                                                                            
-        errors |= get_args_with_first_val(command, &shift);                                
-                                                                                           
-        if (command->cmd & REG) {                                                          
-                                                                                           
-            fprintf(stderr, "incorrect pop: unexpected register\n");                       
-                                                                                           
-            errors |= INCORRECT_VAL;                                                       
-                                                                                           
-            return errors;                                                                 
-        }                                                                                  
-                                                                                           
-        if (shift == 4) {                                                                  
-                                                                                           
-            fprintf(stderr, "incorrect pop: argument in [] expected\n");                   
-                                                                                           
-            errors |= INCR_BR_USAGE;                                                       
-                                                                                           
-            return errors;                                                                 
-        }                                                                                  
-                                                                                           
-        if (*(command->val_ptr + shift) != ']') {
-                                                                                           
-            fprintf(stderr, "incorrect pop argument: ] expected\n");
-                                                                                           
-            errors |= INCR_BR_USAGE;
-                                                                                           
-            return errors;
-        }
+        get_ram_arg(command, shift);
+
+        RETURN_IF(errors);
                                                                                            
         command->cmd |= (char) RAM;
     }
@@ -472,34 +444,15 @@ static int parse_for_push(Command *command, int cmd_num) {
                                                                                                
         if (command->cmd & VAL) {
                                                                                                
-            fprintf(stderr, "incorrect pop: unexpected value\n");
-                                                                                               
             errors |= INCORRECT_VAL;
-                                                                                               
-            return errors;
         }
                                                                                                
     } else if (*command->val_ptr == '[') {
         ++shift;
                                                                                                
-        errors |= get_args_with_first_val(command, &shift);
-        errors |= get_args_with_first_reg(command, &shift);
-                                                                                               
-        if (shift == 0) {
-            fprintf(stderr, "incorrect push: argument in [] expected\n");
-                                                                                               
-            errors |= INCR_BR_USAGE;
-                                                                                               
-            return errors;
-        }
-                                                                                               
-        if (*(command->val_ptr + shift) != ']') {
-            fprintf(stderr, "incorrect push argument: ] expected\n");
-                                                                                               
-            errors |= INCR_BR_USAGE;
-                                                                                               
-            return errors;
-        }
+        errors |= get_ram_arg(command, shift);
+
+        RETURN_IF(errors);
                                                                                                
         command->cmd |= (char) RAM;
                                                                                                
@@ -508,8 +461,6 @@ static int parse_for_push(Command *command, int cmd_num) {
         fprintf(stderr, "incorrect push argument, symbol '%c'\n", *command->val_ptr);
                                                                                                
         errors |= INCORRECT_ARG;
-                                                                                               
-        return errors;
     }
 
     return errors;
@@ -540,6 +491,36 @@ static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
     return NO_ASS_ERR;
 }
 
+
+static int get_ram_arg(Command *command, int shift) {
+    assert(command != nullptr);
+
+    int errors  = NO_ASS_ERR;
+    int shift_before = shift;
+
+    errors |= get_args_with_first_val(command, &shift);
+    errors |= get_args_with_first_reg(command, &shift);
+
+    if (shift == shift_before) {                                                                  
+                                                                                           
+        fprintf(stderr, "incorrect command: argument in [] expected\n");                   
+                                                                                           
+        errors |= INCR_BR_USAGE;                                                       
+                                                                                           
+        return errors;                                                                 
+    }                                                                                  
+                                                                                           
+    if (*(command->val_ptr + shift) != ']') {
+                                                                                           
+        fprintf(stderr, "incorrect command argument: ] expected\n");
+                                                                                           
+        errors |= INCR_BR_USAGE;
+                                                                                           
+        return errors;
+    }
+
+    return NO_ASS_ERR;
+}
 
 static int verify_markers(const Marker *markers, int amount_of_markers) {
     assert(markers != nullptr && "nullptr to markers");
