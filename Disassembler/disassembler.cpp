@@ -162,7 +162,8 @@ static bool binary_is_ok(Disasm *disasm) {
     disasm->ip += sizeof(int);
     
     if (disasm->verification_const != Verification_const) {
-        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match. Expected: %d got: %d\n", Verification_const, disasm->verification_const);
+        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match."
+                        " Expected: %d got: %d\n", Verification_const, disasm->verification_const);
         return false;
     }
 
