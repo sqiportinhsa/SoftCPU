@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <cerrno>
 
 #include "disassembler.hpp"
 #include "../Common/file_reading.hpp"
@@ -113,7 +114,7 @@ bool init_disasm(Disasm *disasm, const char *input_name) {
         return false;
     }
 
-    disasm->code_len = read_file(disasm->code, disasm->code_len, input_name);
+    disasm->code_len = read_file(disasm->code, code_len, input_name);
 
     for (size_t i = 0; i < 15; ++i) {
         char c = *(disasm->code + i);
@@ -161,7 +162,7 @@ static bool binary_is_ok(Disasm *disasm) {
     disasm->ip += sizeof(int);
     
     if (disasm->verification_const != Verification_const) {
-        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match.\n");
+        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match. Expected: %d got: %d\n", Verification_const, disasm->verification_const);
         return false;
     }
 
