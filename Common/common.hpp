@@ -3,19 +3,19 @@
 
 const int Verification_const = 0xDEED;
 
-#define DEF_CMD(name, val, ...) CMD_##name = val,
+#define DEF_CMD(name, val, ...) CMD_##name,
 
 typedef enum {
     MIN_CMD = -1,
     #include "commands.hpp"
-    MAX_CMD   = 10,
-    NOT_A_CMD =  11,
+    MAX_CMD , //
+    NOT_A_CMD,
 } Commands;
 
 #undef DEF_CMD
 
 typedef enum {
-    CMD  =  1 | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
+    CMD  =  (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4), // cringe
     VAL  =  1 << 5,
     REG  =  1 << 6,
     RAM  =  1 << 7,
