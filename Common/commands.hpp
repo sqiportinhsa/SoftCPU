@@ -18,33 +18,31 @@ DEF_CMD(PUSH, 1, PUSH_ARGS, {
     cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
 })
 
-DEF_CMD(ADD, 2, NO_ARGS, {
-    cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
-                                            + StackPop(cpu->cpu_stack));
-})
+#define DEF_CMD_ARITHM(name, num, oper, checkup)                                          \
+        DEF_CMD(name, num, NO_ARGS, {                                                     \
+            cpu->stk_err |= first__popped = StackPop(cpu->cpu_stack);                     \
+            cpu->stk_err |= second_popped = StackPop(cpu->cpu_stack);                     \
+                                                                                          \
+            checkup                                                                       \
+                                                                                          \
+            cpu->stk_err |= StackPush(cpu->cpu_stack, second_popped oper first__popped);  \
+                                                                                          \
+            if (cpu->stk_err != 0) {                                                      \
+                return cpu_err | STACK_ERR;                                               \
+            }                                                                             \
+        })
 
-DEF_CMD(MUL, 3, NO_ARGS, {
-    cpu->stk_err |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) 
-                                            * StackPop(cpu->cpu_stack));
-})
+DEF_CMD_ARITHM(ADD, 2, +, ;)
+DEF_CMD_ARITHM(MUL, 3, *, ;)
+DEF_CMD_ARITHM(SUB, 4, -, ;)
 
-DEF_CMD(SUB, 4, NO_ARGS, {
-    first__popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
-    if (cpu->stk_err != 0) {
-        return cpu_err | STACK_ERR;
+DEF_CMD_ARITHM(DIV, 5, /, {
+    if (first__popped == 0) {
+        return cpu_err | DIV_BY_NULL;
     }
-
-    cpu->stk_err  |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) - first__popped);
 })
 
-DEF_CMD(DIV, 5, NO_ARGS, {
-    first__popped  = StackPop (cpu->cpu_stack, &cpu->stk_err);
-    if (cpu->stk_err != 0) {
-        return cpu_err | STACK_ERR;
-    }
-
-    cpu->stk_err  |= StackPush(cpu->cpu_stack, StackPop(cpu->cpu_stack) / first__popped);
-})
+#undef DEF_CMD_ARITHM
 
 DEF_CMD(OUT, 6, NO_ARGS, {
     printf("result: %d\n", StackPop(cpu->cpu_stack, &cpu->stk_err));
