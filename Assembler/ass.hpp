@@ -22,6 +22,13 @@ const int Max_cmd_len = 5;
             return -1;                                                                 \
         }
 
+#define RETURN_IF_FOR_ASSEMBLE(errors)                                                 \
+        if (errors != 0) {                                                             \
+            fprintf(stderr, "Error: can't compile code. Stop. Errors: %d.\n", errors); \
+            fclose(output);                                                            \
+            return -1;                                                                 \
+        }
+
 struct Command {
     char*      cmd_ptr = nullptr;
     char*      val_ptr = nullptr;
