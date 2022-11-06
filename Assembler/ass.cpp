@@ -32,11 +32,16 @@ static int get_args_with_first_val(Command *command, int *shift);
 
 static size_t skip_comment(char *pointer);
 
+
 const char *default_input_filename  = "input.asm";
 const char *default_output_filename = "output.bin";
 
+const int buf_size = 4096;
+
 
 CLArgs cmd_line_args(int argc, const char **argv) {
+    assert(argv != nullptr);
+
     CLArgs args = parse_cmd_line(argc, argv);
 
     if (args.input == nullptr) {
@@ -52,6 +57,7 @@ CLArgs cmd_line_args(int argc, const char **argv) {
 
 int ass_constructor(Ass *ass, CLArgs *args) {
     assert(args != nullptr && "nullptr to filname");
+    assert(args != nullptr && "nullptr to args");
 
     ass->amount_of_code_symbols = count_elements_in_file(args->input);
 
@@ -75,9 +81,7 @@ int ass_constructor(Ass *ass, CLArgs *args) {
 
     if (ass->commands == nullptr || ass->markers == nullptr) {
 
-        free(ass->code);
-        free(ass->commands);
-        free(ass->markers);
+        free_ass(ass);
 
         return MEMORY_EXCEED;
     }
@@ -89,9 +93,15 @@ int ass_constructor(Ass *ass, CLArgs *args) {
 }
 
 void free_ass(Ass *ass) {
+    assert(ass != nullptr);
+
     free(ass->code);
     free(ass->commands);
     free(ass->markers);
+
+    ass->code     = nullptr;
+    ass->commands = nullptr;
+    ass->markers  = nullptr;
 }
 
 int assemble(Ass *ass) {
@@ -106,6 +116,7 @@ int assemble(Ass *ass) {
     int errors   = 0;
 
     FILE *output = fopen(ass->output_name, "wb");
+    setvbuf(output, nullptr, _IOFBF, buf_size);
 
     if (output == nullptr) {
         fprintf(stderr, "error: can't open file for output");
@@ -119,17 +130,17 @@ int assemble(Ass *ass) {
 
     errors |= first_ass_pass(ass);
 
-    RETURN_IF(errors);
+    RETURN_IF_FOR_ASSEMBLE(errors);
 
     errors |= verify_markers(ass->markers, ass->amount_of_markers);
 
-    RETURN_IF(errors);
+    RETURN_IF_FOR_ASSEMBLE(errors);
 
     ASS_DEBUG("\n\n--------------------------------------------------\n\n");
 
     errors |= second_ass_pass(ass, output);
 
-    RETURN_IF(errors);
+    RETURN_IF_FOR_ASSEMBLE(errors);
 
     ASS_DEBUG("all done");
 
@@ -166,8 +177,8 @@ static int first_ass_pass(Ass *ass) {
 
         nsym += skip_comment(ass->code + nsym);
 
-        ASS_DEBUG("number of line %d first valuable sym: %lld\n",
-                                                 ncommand, nsym);
+        ASS_DEBUG("number of line %d first valuable sym: %zu\n",
+                                                ncommand, nsym);
 
         if (ass->code[nsym] == ':') { //string is a marker
             nsym = process_marker(ass, nsym, position_in_assembled_code, nmarker);
@@ -203,6 +214,8 @@ static int first_ass_pass(Ass *ass) {
 }
 
 static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker) {
+    assert(ass != nullptr);
+    
     ++nsym;
             
     ass->markers[nmarker].ptr                = &(ass->code[nsym]);
@@ -217,6 +230,8 @@ static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_co
 }
 
 static size_t process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len) {
+    assert(ass != nullptr);
+    
     ASS_DEBUG("index of command first symbol: %zu. First symbol: %c\n", nsym, ass->code[nsym]);
 
     ass->commands[ncommand].cmd_ptr = &(ass->code[nsym]);
@@ -241,7 +256,7 @@ static size_t process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len) 
     } else { //command with argument
         ass->commands[ncommand].val_ptr = &(ass->code[nsym]);
 
-        ASS_DEBUG("number of value's position: %lld\n", nsym);
+        ASS_DEBUG("number of value's position: %zu\n", nsym);
     }
 
     nsym += skip_to_newline(&ass->code[nsym]);
@@ -286,8 +301,6 @@ static void write_command(FILE *output, const Command *command) {
 
         fwrite(&command->reg, sizeof(char), 1, output);
     }
-
-    fflush(output);
 }
 
 #define DEF_CMD(name, cmd_num, args, ...)                                                          \
@@ -340,8 +353,8 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
     command->reg = 0;
 
     #include "../Common/commands.hpp"
-    {
-        fprintf(stderr, "invalid command\n");
+    /*else*/ {
+        fprintf(stderr, "invalid command line: %s\n", cmd);
     
         return INCORRECT_CMD;
     }
@@ -407,7 +420,7 @@ static int parse_for_pop(Command *command, int cmd_num) {
                *(command->val_ptr + 2) == 'm' &&                                           
                *(command->val_ptr + 3) == '[') {                                           
                                                                                            
-        shift += (int) strlen("ram[");                                                                        
+        shift += (int) sizeof("ram[") - 1;                                                                        
                                                                                            
         get_ram_arg(command, shift);
 
@@ -549,6 +562,8 @@ static int verify_markers(const Marker *markers, int amount_of_markers) {
 }
 
 static Register get_reg_num(char *ptr) {
+    assert(ptr != nullptr);
+
     if (*ptr != 'r' || *(ptr + 2) != 'x') {
         return NOT_REG;
     }
@@ -562,7 +577,10 @@ static Register get_reg_num(char *ptr) {
     return NOT_REG;
 }
 
-static int get_args_with_first_reg(Command *command, int *shift) {
+static int get_args_with_first_reg(Command *command, int *shift) {  //Velosiped (c) Mentor
+    assert(command != nullptr);
+    assert(shift   != nullptr);
+    
     int errors = NO_ASS_ERR;
 
     if (*(command->val_ptr + *shift) == 'r') {
@@ -583,7 +601,8 @@ static int get_args_with_first_reg(Command *command, int *shift) {
             *(command->val_ptr + *shift) != ']') {
 
             if (*(command->val_ptr + *shift) != '+') {
-                fprintf(stderr, "incorrect push arguments: invalid symbol '%c' aka '%d' after register\n", *(command->val_ptr + *shift), *(command->val_ptr + *shift));
+                fprintf(stderr, "incorrect push arguments: invalid symbol '%c' aka '%d'"
+                   " after register\n", *(command->val_ptr + *shift), *(command->val_ptr + *shift));
 
                 errors |= UNIDENTIF_SYM;
                 return errors;
@@ -608,6 +627,9 @@ static int get_args_with_first_reg(Command *command, int *shift) {
 }
 
 static int get_args_with_first_val(Command *command, int *shift) {
+    assert(command != nullptr);
+    assert(shift   != nullptr);
+
     int errors = NO_ASS_ERR;
 
     if (isdigit(*(command->val_ptr + *shift)) || *(command->val_ptr + *shift) == '-') {
@@ -622,7 +644,8 @@ static int get_args_with_first_val(Command *command, int *shift) {
             *(command->val_ptr + *shift) != ']') {
 
             if (*(command->val_ptr + *shift) != '+') {
-                fprintf(stderr, "incorrect push arguments: unexpected symbol '%c' aka '%d' after value\n", *(command->val_ptr + *shift), *(command->val_ptr + *shift));
+                fprintf(stderr, "incorrect push arguments: unexpected symbol '%c' aka '%d' "
+                       "after value\n", *(command->val_ptr + *shift), *(command->val_ptr + *shift));
                 errors |= UNIDENTIF_SYM;
                 return errors;
             }
