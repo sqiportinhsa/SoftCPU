@@ -16,14 +16,19 @@ int main(int argc, const char **argv) {
 
     Ass ass = {};
 
-
     errors |= ass_constructor(&ass, &args);
 
     if (errors != 0) {
+        free_ass(&ass);
         return -1;
     }
 
     errors |= assemble(&ass);
+
+    if (errors != 0) {
+        free_ass(&ass);
+        return -1;
+    }
 
     free_ass(&ass);
     
