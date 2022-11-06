@@ -144,11 +144,6 @@ int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, 
         return NULLPTR_ERR;
     }
 
-    cpu->cpu_stack = nullptr;
-    cpu->logs      = nullptr;
-    cpu->code      = nullptr;
-
-
     allocate_memory(cpu->cpu_stack, Stack, 1);
 
     StackCtr(cpu->cpu_stack, 0);

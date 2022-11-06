@@ -39,6 +39,7 @@ enum CPU_errors {
     UNDEF_CMD     = 1 << 3,
     INCORR_POP    = 1 << 4,
     INCORR_BINARY = 1 << 5,
+    DIV_BY_NULL   = 1 << 6,
 };
 
 #define CPU_constructor(cpu, code_len) real_CPU_constructor(cpu, code_len, __LINE__,     \
