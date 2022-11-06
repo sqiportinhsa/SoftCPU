@@ -1,47 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "disassembler.h"
-#include "..\Common\file_reading.h"
-#include "..\Common\common.h"
+#include "disassembler.hpp"
+#include "../Common/file_reading.hpp"
+#include "../Common/common.hpp"
 
-int main() {
-    size_t code_len = count_elements_in_file("assembled.bin");
+int main(int argc, const char **argv) {
+    CLArgs clargs = get_cmd_line_args(argc, argv);
 
     Disasm disasm = {};
 
-    disasm_constructor(&disasm, code_len);
-
-    disasm.code_len = read_file(disasm.code, disasm.code_len, "assembled.bin");
-
-    disasm.verification_const = *((int*) (disasm.code + disasm.ip));
-    disasm.ip += sizeof(int);
-    
-    if (disasm.verification_const != Verification_const) {
-        fprintf(stderr, "Error: incorrect binary file, verification constant doesn't match.\n");
+    if (!init_disasm(&disasm, clargs.input)) {
+        fprintf(stderr, "Can't disassemble: disasm inintialisation error\n");
+        free_disasm(&disasm);
         return -1;
     }
 
-    disasm.ass_version = *((int*) (disasm.code + disasm.ip));
-    disasm.ip += sizeof(int);
-
-    if (disasm.ass_version > Disasm_version) {
-        fprintf(stderr, "Error: processor version is less than assembler version\n");
+    if (!get_markers(&disasm)) {
+        fprintf(stderr, "Incorrect command, can't disassemble\n");
+        free_disasm(&disasm);
         return -1;
     }
 
-    disasm.amount_of_cmds = *((int*) (disasm.code + disasm.ip));
-    disasm.ip += sizeof(int);
+    disassemble(&disasm, clargs.output);
 
-    //printf("%d\n", ip);
-
-    //printf("%d %d\n", ass_ver, amount_of_commands);
-
-    /*for(size_t i = 0; i < amount_of_elements; ++i) {
-        printf("<%c>", text[i]);
-    }*/
-
-    disassemble(&disasm);
+    free(&disasm);
 
     return 0;
 }
