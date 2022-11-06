@@ -7,10 +7,10 @@ all: $(TARGET)
 $(TARGET): Assembler/bin/ass_main.o Assembler/bin/ass.o Stack/bin/stack.o Stack/bin/stack_logs.o Stack/bin/verification.o Common/bin/file_reading.o 
 	g++ Assembler/bin/ass_main.o Assembler/bin/ass.o Stack/bin/stack.o Stack/bin/stack_logs.o  Stack/bin/verification.o Common/bin/file_reading.o -o $(TARGET) $(CPPFLAGS)
 
-Assembler/bin/ass_main.o: Assembler/ass_main.cpp Assembler/ass.hpp Common/Commands.hpp Common/file_reading.hpp
+Assembler/bin/ass_main.o: Assembler/ass_main.cpp Assembler/ass.hpp Common/Commands.hpp Common/file_reading.hpp Common/common.hpp
 	g++ -c Assembler/ass_main.cpp -o Assembler/bin/ass_main.o $(CPPFLAGS)
 
-Assembler/bin/ass.o: Assembler/ass.cpp Assembler/ass.hpp Common/Commands.hpp Common/file_reading.hpp
+Assembler/bin/ass.o: Assembler/ass.cpp Assembler/ass.hpp Common/Commands.hpp Common/file_reading.hpp Common/common.hpp
 	g++ -c Assembler/ass.cpp -o Assembler/bin/ass.o $(CPPFLAGS)
 
 Stack/bin/stack.o: Stack/stack.cpp
