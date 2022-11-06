@@ -6,6 +6,7 @@
 #include "../Stack/stack_verification.h"
 
 #include "../Common/file_reading.hpp"
+#include "../Common/common.hpp"
 
 const int Ass_version = 3;
 const int Max_cmd_len = 5;
@@ -33,9 +34,9 @@ struct Command {
     char*      cmd_ptr = nullptr;
     char*      val_ptr = nullptr;
     int        cmd_len = 0;
-    char       cmd = 0;
     int        val = 0;
     char       reg = 0;
+    CMD        cmd;
 };
 
 struct Marker {

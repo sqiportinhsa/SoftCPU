@@ -15,10 +15,17 @@ typedef enum {
 #undef DEF_CMD
 
 typedef enum {
-    CMD  =  (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4), // cringe
+    CMD1  =  (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4), // cringe
     VAL  =  1 << 5,
     REG  =  1 << 6,
     RAM  =  1 << 7,
 } Arg_bytes;
+
+struct CMD {
+    unsigned char cmd : 5 = 0;
+    unsigned char val : 1 = 0;
+    unsigned char reg : 1 = 0;
+    unsigned char ram : 1 = 0;
+};
 
 #endif

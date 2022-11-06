@@ -12,8 +12,8 @@ static const char* get_input_filename(int argc, const char **argv);
 static void get_amount_of_cmds(CPU *cpu);
 static bool binary_verification(CPU *cpu);
 
-static int pop (char cmd, CPU *cpu, char cmd_reg, int cmd_val);
-static int push(char cmd, CPU *cpu, char cmd_reg, int cmd_val);
+static int pop (CMD cmd, CPU *cpu, char cmd_reg, int cmd_val);
+static int push(CMD cmd, CPU *cpu, char cmd_reg, int cmd_val);
 static int calc_sqrt(CPU *cpu);
 
 
@@ -33,10 +33,10 @@ int calculate(CPU *cpu) {
     while (cpu->ip < cpu->code_len) {
         dump_cpu(cpu, GetLogStream());
 
-        char cmd  = *((char*) (cpu->code + cpu->ip));
+        CMD cmd = *((CMD*) (cpu->code + cpu->ip));
         cpu->ip += sizeof(char);
 
-        if (cmd == CMD_HLT) {
+        if (cmd.cmd == CMD_HLT) {
             break;
         }
 
@@ -46,23 +46,23 @@ int calculate(CPU *cpu) {
         int  cmd_val       = 0;
         char cmd_reg       = 0;
 
-        if (cmd & VAL) {
+        if (cmd.val) {
             cmd_val = *((int*)  (cpu->code + cpu->ip));
             cpu->ip += sizeof(int);
         }
 
-        if (cmd & REG) {
+        if (cmd.reg) {
             cmd_reg = *((char*) (cpu->code + cpu->ip));
             cpu->ip += sizeof(char);
         }
 
-        if (cmd & RAM) {
-            if (cmd & REG) {
+        if (cmd.ram) {
+            if (cmd.reg) {
                 cmd_val += cpu->registers[(int) cmd_reg];
             }
         }
 
-        switch (cmd & CMD) {
+        switch (cmd.cmd) {
             #include "../Common/commands.hpp"
             default:
                 fprintf(stderr, "Error: undefined command\n");
@@ -80,7 +80,7 @@ int calculate(CPU *cpu) {
 
 #undef DEF_CMD
 
-static int pop(char cmd, CPU *cpu, char cmd_reg, int cmd_val) {
+static int pop(CMD cmd, CPU *cpu, char cmd_reg, int cmd_val) {
     assert(cpu != nullptr);
 
     int popped = 0;
@@ -92,11 +92,11 @@ static int pop(char cmd, CPU *cpu, char cmd_reg, int cmd_val) {
         return STACK_ERR;
     }
 
-    if (cmd & RAM) {
+    if (cmd.ram) {
 
         cpu->ram[cmd_val] = popped;
 
-    } else if (cmd & REG) {
+    } else if (cmd.reg) {
 
         cpu->registers[(int) cmd_reg] = popped;
 
@@ -108,16 +108,16 @@ static int pop(char cmd, CPU *cpu, char cmd_reg, int cmd_val) {
     return NO_CPU_ERR;
 }
 
-static int push(char cmd, CPU *cpu, char cmd_reg, int cmd_val) {
+static int push(CMD cmd, CPU *cpu, char cmd_reg, int cmd_val) {
     assert(cpu != nullptr);
 
     int val_for_push = cmd_val;
 
-    if (cmd & REG) {
+    if (cmd.reg) {
         val_for_push = cpu->registers[(int) cmd_reg];
     }
 
-    if (cmd & RAM) {
+    if (cmd.ram) {
         val_for_push = cpu->ram[cmd_val];
     }
 
@@ -157,7 +157,7 @@ int prepare_cpu(CPU *cpu, int argc, const char **argv) {
 
     size_t code_len = count_elements_in_file(input_filename);
 
-    errors != CPU_constructor(cpu, code_len);
+    errors |= CPU_constructor(cpu, code_len);
 
     if (errors) {
         return errors;

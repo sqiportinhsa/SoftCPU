@@ -270,7 +270,7 @@ static int second_ass_pass(Ass *ass, FILE *output) {
     }
 
     for (int ncommand = 0; ncommand < ass->amount_of_commands; ++ncommand) {
-        ASS_DEBUG("working with command number %d, command code: %d\n", ncommand, ass->commands[ncommand].cmd & CMD);
+        ASS_DEBUG("working with command number %d, command code: %d\n", ncommand, ass->commands[ncommand].cmd.cmd);
         parse_command(ass,    &ass->commands[ncommand]);
         write_command(output, &ass->commands[ncommand]);
     }
@@ -283,19 +283,19 @@ static void write_command(FILE *output, const Command *command) {
     assert(output  != nullptr);
     assert(command != nullptr);
 
-    ASS_DEBUG("\nstart processing command. command number: %d\n", command->cmd & CMD);
+    ASS_DEBUG("\nstart processing command. command number: %d\n", command->cmd.cmd);
 
-    fwrite(&command->cmd, sizeof(char), 1, output);
+    fwrite(&command->cmd, sizeof(CMD), 1, output);
 
 
-    if (command->cmd & VAL) {
+    if (command->cmd.val) {
 
         ASS_DEBUG("there is a value for this command: %d\n", command->val);
 
         fwrite(&command->val, sizeof(int), 1, output);
     }
 
-    if (command->cmd & REG) {
+    if (command->cmd.reg) {
 
         ASS_DEBUG("there is a register for this command: %d\n", command->reg);
 
@@ -308,7 +308,7 @@ static void write_command(FILE *output, const Command *command) {
                                                                                                    \
         if (args == NO_ARGS) {                                                                     \
                                                                                                    \
-            command->cmd = cmd_num;                                                                \
+            command->cmd.cmd = cmd_num;                                                            \
                                                                                                    \
             if (command->val_ptr != nullptr) {return UNEXPEC_ARG;}                                 \
                                                                                                    \
@@ -348,9 +348,9 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
 
     cmd[len] = '\0';
 
-    command->cmd = 0;
-    command->val = 0;
-    command->reg = 0;
+    command->cmd.cmd = 0;
+    command->val     = 0;
+    command->reg     = 0;
 
     #include "../Common/commands.hpp"
     /*else*/ {
@@ -361,14 +361,14 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
 
     int cmd_size = sizeof(char);
 
-    if (command->cmd & VAL) {
+    if (command->cmd.val) {
 
         ASS_DEBUG("added sizeof(int)\n");
 
         cmd_size += (int) sizeof(int);
     }
 
-    if (command->cmd & REG) {
+    if (command->cmd.reg) {
 
         cmd_size += (int) sizeof(char);
     }
@@ -388,7 +388,7 @@ static int parse_for_pop(Command *command, int cmd_num) {
 
     int errors = 0;
 
-    command->cmd = (char) cmd_num;                                                                    
+    command->cmd.cmd = cmd_num;                                                                    
                                                                                            
     if (command->val_ptr == nullptr) {                                                     
         fprintf(stderr, "incorrect pop: argument expected\n");                             
@@ -407,14 +407,14 @@ static int parse_for_pop(Command *command, int cmd_num) {
                                                               
         errors |= get_args_with_first_reg(command, &shift);                                                                                                                
                                                                                            
-        if (command->cmd & VAL) {                                                          
+        if (command->cmd.val) {                                                          
                                      
             errors |= INCORRECT_VAL;                                                                                                                      
         }      
 
         RETURN_IF(errors);                                                                            
                                                           
-        command->cmd |= REG;                                                               
+        command->cmd.reg = 1;                                                               
                                                                                            
     } else if (*(command->val_ptr + 1) == 'a' &&                                           
                *(command->val_ptr + 2) == 'm' &&                                           
@@ -426,7 +426,7 @@ static int parse_for_pop(Command *command, int cmd_num) {
 
         RETURN_IF(errors);
                                                                                            
-        command->cmd |= (char) RAM;
+        command->cmd.ram = 1;
     }
 
     return errors;
@@ -438,7 +438,7 @@ static int parse_for_push(Command *command, int cmd_num) {
     
     int errors = 0;
 
-    command->cmd = (char) cmd_num;
+    command->cmd.cmd = cmd_num;
                                                                                                    
     if (command->val_ptr == nullptr) {
         fprintf(stderr, "incorrect push: argument expected\n");
@@ -455,7 +455,7 @@ static int parse_for_push(Command *command, int cmd_num) {
                                                                                                    
         errors |= get_args_with_first_reg(command, &shift);
                                                                                                
-        if (command->cmd & VAL) {
+        if (command->cmd.val) {
                                                                                                
             errors |= INCORRECT_VAL;
         }
@@ -467,7 +467,7 @@ static int parse_for_push(Command *command, int cmd_num) {
 
         RETURN_IF(errors);
                                                                                                
-        command->cmd |= (char) RAM;
+        command->cmd.ram = 1;
                                                                                                
     } else {
 
@@ -485,8 +485,8 @@ static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
     assert (ass->markers     != nullptr);
     assert (command->val_ptr != nullptr);
 
-    command->cmd  = (char) cmd_num;
-    command->cmd |= VAL;
+    command->cmd.cmd = cmd_num;
+    command->cmd.val = 1;
 
     for (int nmarker = 0; nmarker < ass->amount_of_markers; ++nmarker) {
 
@@ -591,7 +591,7 @@ static int get_args_with_first_reg(Command *command, int *shift) {  //Velosiped 
             return errors;
         }
 
-        command->cmd |= REG;
+        command->cmd.reg = 1;
 
         *shift += 3;
         *shift += (int) skip_spaces(command->val_ptr + *shift);
@@ -613,7 +613,7 @@ static int get_args_with_first_reg(Command *command, int *shift) {  //Velosiped 
 
             if (isdigit(*(command->val_ptr + *shift)) || *(command->val_ptr + *shift) == '-') {
                 *shift += get_val(command->val_ptr + *shift, &command->val);
-                command->cmd |= VAL;
+                command->cmd.val = 1;
 
             } else {
                 fprintf(stderr, "incorrect push arguments: expexted value addition\n");
@@ -637,7 +637,7 @@ static int get_args_with_first_val(Command *command, int *shift) {
         *shift += get_val(command->val_ptr + *shift, &command->val);
         *shift += (int) skip_spaces(command->val_ptr + *shift);
 
-        command->cmd |= VAL;
+        command->cmd.val = 1;
 
         if (*(command->val_ptr + *shift) != '\n' && 
             *(command->val_ptr + *shift) != ';'  &&
@@ -660,7 +660,7 @@ static int get_args_with_first_val(Command *command, int *shift) {
                 return errors;
             }
 
-            command->cmd |= REG;
+            command->cmd.reg = 1;
             *shift += 3;
         }
     }
