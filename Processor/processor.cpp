@@ -12,6 +12,13 @@ static const char* get_input_filename(int argc, const char **argv);
 static void get_amount_of_cmds(CPU *cpu);
 static bool binary_verification(CPU *cpu);
 
+static int pop (char cmd, CPU *cpu, char cmd_reg, int cmd_val);
+static int push(char cmd, CPU *cpu, char cmd_reg, int cmd_val);
+static int calc_sqrt(CPU *cpu);
+
+
+const char *default_input = "output.bin";
+
 
 #define DEF_CMD(name, val, args, ...) \
     case val:                         \
@@ -19,21 +26,23 @@ static bool binary_verification(CPU *cpu);
         break;                        \
 
 int calculate(CPU *cpu) {
+    assert(cpu != nullptr);
+
     int cpu_err   = NO_CPU_ERR;
 
     while (cpu->ip < cpu->code_len) {
         dump_cpu(cpu, GetLogStream());
 
-        int cmd  = *((char*) (cpu->code + cpu->ip));
+        char cmd  = *((char*) (cpu->code + cpu->ip));
         cpu->ip += sizeof(char);
 
         if (cmd == CMD_HLT) {
             break;
         }
 
+        int  val_for_push  = 0;
         int  first__popped = 0;
         int  second_popped = 0;
-        int  val_for_push  = 0;
         int  cmd_val       = 0;
         char cmd_reg       = 0;
 
@@ -45,6 +54,12 @@ int calculate(CPU *cpu) {
         if (cmd & REG) {
             cmd_reg = *((char*) (cpu->code + cpu->ip));
             cpu->ip += sizeof(char);
+        }
+
+        if (cmd & RAM) {
+            if (cmd & REG) {
+                cmd_val += cpu->registers[(int) cmd_reg];
+            }
         }
 
         switch (cmd & CMD) {
@@ -64,6 +79,76 @@ int calculate(CPU *cpu) {
 }
 
 #undef DEF_CMD
+
+static int pop(char cmd, CPU *cpu, char cmd_reg, int cmd_val) {
+    assert(cpu != nullptr);
+
+    int popped = 0;
+    int errors = 0;
+
+    popped |= StackPop(cpu->cpu_stack, &errors);
+
+    if (errors) {
+        return STACK_ERR;
+    }
+
+    if (cmd & RAM) {
+
+        cpu->ram[cmd_val] = popped;
+
+    } else if (cmd & REG) {
+
+        cpu->registers[(int) cmd_reg] = popped;
+
+    } else {
+
+        return INCORR_POP;
+    }
+    
+    return NO_CPU_ERR;
+}
+
+static int push(char cmd, CPU *cpu, char cmd_reg, int cmd_val) {
+    assert(cpu != nullptr);
+
+    int val_for_push = cmd_val;
+
+    if (cmd & REG) {
+        val_for_push = cpu->registers[(int) cmd_reg];
+    }
+
+    if (cmd & RAM) {
+        val_for_push = cpu->ram[cmd_val];
+    }
+
+    cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
+
+    if (cpu->stk_err) {
+        return STACK_ERR;
+    }
+
+    return NO_CPU_ERR;
+}
+
+static int calc_sqrt(CPU *cpu) {
+    assert(cpu != nullptr);
+    
+    int first__popped  = StackPop(cpu->cpu_stack, &cpu->stk_err);
+
+    if (cpu->stk_err) {
+        return STACK_ERR;
+    }
+
+    int val_for_push  = (int) sqrt((double) first__popped);
+
+    cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
+
+    if (cpu->stk_err) {
+        return STACK_ERR;
+    }
+
+    return NO_CPU_ERR;
+}
 
 int prepare_cpu(CPU *cpu, int argc, const char **argv) {
     int errors = NO_CPU_ERR;

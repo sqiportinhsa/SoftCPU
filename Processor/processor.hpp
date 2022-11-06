@@ -8,7 +8,6 @@ const int Proc_version   = 3;
 const int Reg_amount     = 5;
 const int RAM_size       = 100;
 
-static const char *default_input = "output.bin";
 
 struct CPU_logs{
     const char* file_of_creation;

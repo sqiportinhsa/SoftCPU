@@ -6,22 +6,13 @@
 DEF_CMD(HLT, 0, NO_ARGS)
 
 DEF_CMD(PUSH, 1, PUSH_ARGS, {
-    if (cmd & VAL) {
-        val_for_push += cmd_val;
-    }
-    if (cmd & REG) {
-        val_for_push += cpu->registers[(int) cmd_reg];
-    }
-    if (cmd & RAM) {
-        val_for_push  = cpu->ram[val_for_push];
-    }
-    cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
+    push(cmd, cpu, cmd_reg, cmd_val);
 })
 
 #define DEF_CMD_ARITHM(name, num, oper, checkup)                                          \
         DEF_CMD(name, num, NO_ARGS, {                                                     \
-            cpu->stk_err |= first__popped = StackPop(cpu->cpu_stack);                     \
-            cpu->stk_err |= second_popped = StackPop(cpu->cpu_stack);                     \
+            first__popped = StackPop(cpu->cpu_stack, &cpu->stk_err);                      \
+            second_popped = StackPop(cpu->cpu_stack, &cpu->stk_err);                      \
                                                                                           \
             checkup                                                                       \
                                                                                           \
@@ -49,14 +40,7 @@ DEF_CMD(OUT, 6, NO_ARGS, {
 })
 
 DEF_CMD(POP, 7, POP__ARGS, {
-    if (cmd & REG) {
-        cpu->registers[(int) cmd_reg] = StackPop(cpu->cpu_stack, &cpu->stk_err);
-    } else if (cmd & RAM) {
-        cpu->ram[(int) cmd_val]       = StackPop(cpu->cpu_stack, &cpu->stk_err);
-    } else {
-        cpu_err |= INCORR_POP;
-        return cpu_err;
-    }
+    cpu_err |= pop(cmd, cpu, cmd_reg, cmd_val);
 })
 
 DEF_CMD(JMP, 8, JUMP_ARGS, {
@@ -83,7 +67,7 @@ DEF_JMP_IF(JNE, 14, !=)
 #undef DEF_JMP_IF
 
 DEF_CMD(CALL, 15, JUMP_ARGS, {
-    StackPush(cpu->adr_stack, cpu->ip);
+    StackPush(cpu->adr_stack, (int) cpu->ip);
     cpu->ip = *((int *) (cpu->code + cpu->ip) - 1);
 })
 
@@ -97,13 +81,7 @@ DEF_CMD(IN, 17, NO_ARGS, {
 })
 
 DEF_CMD(SQRT, 18, NO_ARGS, {
-    first__popped  = StackPop(cpu->cpu_stack, &cpu->stk_err);
-    if (cpu->stk_err != 0) {
-        return cpu_err | STACK_ERR;
-    }
-
-    val_for_push  = (int) sqrt((double) first__popped);
-    cpu->stk_err |= StackPush(cpu->cpu_stack, val_for_push);
+    cpu_err |= calc_sqrt(cpu);
 })
 
 

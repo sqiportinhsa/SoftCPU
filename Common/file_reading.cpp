@@ -56,9 +56,12 @@ size_t count_elements_in_file(const char file_name[]) {
 
 size_t read_file(char text[], size_t amount_of_symbols, const char* file_name) {
     assert(text  != nullptr && "text  is nullptr");
-    assert(input != nullptr && "input is nullptr");
     
     FILE *input = fopen(file_name, "rb");
+
+    if (input == nullptr) {
+        return 0;
+    }
 
     size_t nread = fread(text, sizeof(char), amount_of_symbols, input);
 
