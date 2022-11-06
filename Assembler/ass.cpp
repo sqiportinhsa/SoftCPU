@@ -124,10 +124,6 @@ int assemble(Ass *ass) {
         return errors;
     }
 
-    fwrite(&Verification_const,           sizeof(int), 1, output);
-    fwrite(&Ass_version,                  sizeof(int), 1, output);
-    fwrite(&ass->amount_of_code_strings,  sizeof(int), 1, output);
-
     errors |= first_ass_pass(ass);
 
     RETURN_IF_FOR_ASSEMBLE(errors);
@@ -137,6 +133,10 @@ int assemble(Ass *ass) {
     RETURN_IF_FOR_ASSEMBLE(errors);
 
     ASS_DEBUG("\n\n--------------------------------------------------\n\n");
+
+    fwrite(&Verification_const,       sizeof(int), 1, output);
+    fwrite(&Ass_version,              sizeof(int), 1, output);
+    fwrite(&ass->amount_of_commands,  sizeof(int), 1, output);
 
     errors |= second_ass_pass(ass, output);
 
