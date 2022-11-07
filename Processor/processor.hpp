@@ -5,7 +5,6 @@
 #include "../Common/common.hpp"
 #include "../Stack/stack.h"
 
-#define VIDEO
 
 const int Sqr_size      = 5;
 const int Screen_width  = 100 * Sqr_size;
@@ -45,7 +44,7 @@ struct Color {
     unsigned char b = 0;
 };
 
-union Color_wrapper {
+union Cell_color {
     int arg;
     Color color;
 };

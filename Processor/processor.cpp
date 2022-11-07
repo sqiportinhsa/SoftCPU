@@ -376,17 +376,18 @@ static void destruct_video(CPU *cpu) {
 static void render_video(CPU *cpu) {
     assert(cpu != nullptr);
 
-    Color_wrapper cell = {};
+    Cell_color cell = {};
 
     SDL_Rect rect = {};
+
     rect.h = Sqr_size;
     rect.w = Sqr_size;
 
     SDL_SetRenderDrawColor (cpu->renderer, 0, 0, 0, 255);
-    SDL_RenderClear (cpu->renderer);
+    SDL_RenderClear        (cpu->renderer);
 
-    for (int i = 0; i < Screen_height; ++i) {
-        for (int j = 0; j < Screen_width; ++j) {
+    for (int i = 0; i < Screen_height; ++i) {    //vertical   coordinate
+        for (int j = 0; j < Screen_width; ++j) { //horisontal coordinate
 
             cell.arg = cpu->ram[Screen_width*i + j];
 
