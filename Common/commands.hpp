@@ -44,7 +44,7 @@ DEF_CMD(POP, 7, POP__ARGS, {
 })
 
 DEF_CMD(JMP, 8, JUMP_ARGS, {
-    cpu->ip = *((int *) (cpu->code + cpu->ip) - 1);
+    cpu->ip = *((int*) (cpu->code + cpu->ip) - 1);
 })
 
 #define DEF_JMP_IF(name, cmd_num, oper)                                \
@@ -68,7 +68,7 @@ DEF_JMP_IF(JNE, 14, !=)
 
 DEF_CMD(CALL, 15, JUMP_ARGS, {
     StackPush(cpu->adr_stack, (int) cpu->ip);
-    cpu->ip = *((int *) (cpu->code + cpu->ip) - 1);
+    cpu->ip = *((int*) (cpu->code + cpu->ip) - 1);
 })
 
 DEF_CMD(RET, 16, NO_ARGS, {
