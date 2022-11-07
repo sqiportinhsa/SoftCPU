@@ -74,9 +74,9 @@ int ass_constructor(Ass *ass, CLArgs *args) {
     ass->amount_of_code_strings = count_strings(ass->code, ass->amount_of_code_symbols);
 
 
-    ass->commands = (Command*) calloc(ass->amount_of_code_strings, sizeof(Command));
+    ass->commands = (Command*) calloc((size_t) ass->amount_of_code_strings, sizeof(Command));
 
-    ass->markers  = (Marker*)  calloc(ass->amount_of_code_strings, sizeof(Marker));
+    ass->markers  = (Marker*)  calloc((size_t) ass->amount_of_code_strings, sizeof(Marker));
 
 
     if (ass->commands == nullptr || ass->markers == nullptr) {
@@ -223,7 +223,7 @@ static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_co
     ++nsym;
             
     ass->markers[nmarker].ptr                = &(ass->code[nsym]);
-    ass->markers[nmarker].index_in_assembled = position_in_assembled_code;
+    ass->markers[nmarker].index_in_assembled = (unsigned int) position_in_assembled_code;
     ass->markers[nmarker].len               += (unsigned int) skip_to_newline(ass->code + nsym);
 
     nsym += ass->markers[nmarker].len;
@@ -348,7 +348,7 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
 
     char cmd[Max_cmd_len] = {};
 
-    memcpy(cmd, command->cmd_ptr, len);
+    memcpy(cmd, command->cmd_ptr, (size_t) len);
 
     cmd[len] = '\0';
 
@@ -497,7 +497,7 @@ static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
         if (strncasecmp(ass->markers[nmarker].ptr, command->val_ptr, 
                                     ass->markers[nmarker].len) == 0) {
 
-            command->val = ass->markers[nmarker].index_in_assembled;
+            command->val = (int) ass->markers[nmarker].index_in_assembled;
 
             ASS_DEBUG("index in assembled: %d\n", command->val);
             
