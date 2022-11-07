@@ -53,12 +53,12 @@ int calculate(CPU *cpu) {
         char cmd_reg       = 0;
 
         if (cmd.val) {
-            cmd_val = *((int*)  (cpu->code + cpu->ip));
+            cmd_val  = *((int*)  (cpu->code + cpu->ip));
             cpu->ip += sizeof(int);
         }
 
         if (cmd.reg) {
-            cmd_reg = *((char*) (cpu->code + cpu->ip));
+            cmd_reg  = *((char*) (cpu->code + cpu->ip));
             cpu->ip += sizeof(char);
         }
 
@@ -261,6 +261,10 @@ int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, 
 
     allocate_memory(cpu->logs, CPU_logs, 1);
 
+    allocate_memory(cpu->ram,       int, RAM_size);
+
+    allocate_memory(cpu->registers, int, Reg_amount);
+
 
     cpu->logs->line_of_creation = line;
     cpu->logs->file_of_creation = file;
@@ -280,15 +284,22 @@ int CPU_destructor(CPU *cpu) {
         return NULLPTR_ERR;
     }
 
+    StackDestr(cpu->cpu_stack);
+    StackDestr(cpu->adr_stack);
+
     free(cpu->code);
     free(cpu->cpu_stack);
     free(cpu->logs);
     free(cpu->adr_stack);
+    free(cpu->ram);
+    free(cpu->registers);
 
     cpu->code       = nullptr;
     cpu->cpu_stack  = nullptr;
     cpu->logs       = nullptr;
     cpu->adr_stack  = nullptr;
+    cpu->ram        = nullptr;
+    cpu->registers  = nullptr;
 
     cpu->amount_of_cmds = 0;
     cpu->code_len       = 0;
@@ -366,7 +377,7 @@ static void init_video(CPU *cpu) {
 
 static void destruct_video(CPU *cpu) {
     SDL_DestroyRenderer (cpu->renderer);
-    SDL_DestroyWindow (cpu->window);
+    SDL_DestroyWindow   (cpu->window);
     SDL_Quit ();
 
     cpu->renderer = nullptr;

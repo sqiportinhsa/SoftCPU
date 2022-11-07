@@ -6,6 +6,8 @@
 #include "../Stack/stack.h"
 
 
+#define VIDEO
+
 const int Sqr_size      = 5;
 const int Screen_width  = 100 * Sqr_size;
 const int Screen_height = 100 * Sqr_size;
@@ -31,8 +33,8 @@ struct CPU {
     int           amount_of_cmds        = 0;
     int           ass_version           = 0;
     int           verification_const    = 0;
-    int           registers[Reg_amount] = {};
-    int           ram[RAM_size]         = {};
+    int*          registers             = nullptr;
+    int*          ram                   = nullptr;
     int           stk_err               = NO_ERROR;
     SDL_Renderer* renderer              = nullptr;
     SDL_Window*   window                = nullptr;
