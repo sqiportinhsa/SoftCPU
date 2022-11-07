@@ -70,6 +70,7 @@ enum CPU_errors {
 #define RETURN_IF(errors)                           \
         if (errors != 0) {                          \
             fprintf(logfile, "errors: %d", errors); \
+            CPU_destructor(&cpu);                   \
             fclose (logfile);                       \
             return -1;                              \
         }
