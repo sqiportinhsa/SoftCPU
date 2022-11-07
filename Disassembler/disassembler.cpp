@@ -114,11 +114,6 @@ bool init_disasm(Disasm *disasm, const char *input_name) {
 
     disasm->code_len = read_file(disasm->code, code_len, input_name);
 
-    for (size_t i = 0; i < 15; ++i) {
-        char c = *(disasm->code + i);
-        //printf(" %d ", c);
-    }
-
     if (!binary_is_ok(disasm)) {
         return false;
     }
@@ -145,8 +140,6 @@ CLArgs get_cmd_line_args(int argc, const char **argv) {
     if (clargs.output == nullptr) {
         clargs.output = default_output_filename;
     }
-
-    printf("%s %s\n", clargs.input, clargs.output);
 
     return clargs;
 }
