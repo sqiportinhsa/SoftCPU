@@ -36,7 +36,6 @@ void disassemble(Disasm *disasm, const char *output_name) {
     int n_command = 0;
 
     while (n_command < disasm->amount_of_cmds && disasm->ip < disasm->code_len - 1) {
-        fprintf(stderr, " %d \n", n_command);
 
         CMD cmd = *((CMD*) (disasm->code + disasm->ip));
 
@@ -78,7 +77,6 @@ bool get_markers(Disasm *disasm) {
     size_t ip        = disasm->ip;
 
     while (n_command < disasm->amount_of_cmds && ip < disasm->code_len) {
-        fprintf(stderr, " %d \n", n_command);
         
         CMD cmd = *((CMD*) (disasm->code + ip));
 
