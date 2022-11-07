@@ -60,6 +60,9 @@ int StackDestr(Stack *stk) {
     free((char*)stk->data - sizeof(Canary_t));
     stk->data = nullptr;
 
+    free(stk->logs);
+    stk->logs = nullptr;
+
     return errors;
 }
 
