@@ -73,7 +73,8 @@ int ass_constructor(Ass *ass, CLArgs *args) {
 
     ass->amount_of_code_symbols = read_file(ass->code, ass->amount_of_code_symbols, args->input);
 
-    ass->amount_of_code_strings = (unsigned int) count_strings(ass->code, ass->amount_of_code_symbols);
+    ass->amount_of_code_strings = (unsigned int) count_strings(ass->code, 
+                                                               ass->amount_of_code_symbols);
 
 
     ass->commands = (Command*) calloc((size_t) ass->amount_of_code_strings, sizeof(Command));
@@ -181,11 +182,6 @@ static int first_ass_pass(Ass *ass) {
             break;
         }
 
-        ASS_DEBUG("index after skipping spaces and comments: %zu\n", nsym);
-
-        ASS_DEBUG("number of line %d first valuable sym: %zu\n",
-                                                ncommand, nsym);
-
         if (ass->code[nsym] == ':') { //string is a marker
             nsym = process_marker(ass, nsym, position_in_assembled_code, nmarker);
 
@@ -198,15 +194,9 @@ static int first_ass_pass(Ass *ass) {
 
         nsym = process_command(ass, ncommand, nsym, cmd_len);
 
-        ASS_DEBUG("index after processing command: %zu\n", nsym);
-
-        ASS_DEBUG("parsing command %d. pos in assembled before: %d\n", ncommand, position_in_assembled_code);
-
         errors |= parse_command(ass, &ass->commands[ncommand], &position_in_assembled_code);
         
         RETURN_IF(errors);
-
-        ASS_DEBUG("parsing command %d. pos in assembled after : %d\n", ncommand, position_in_assembled_code);
 
         ++nsym;
         ++ncommand;
@@ -282,9 +272,15 @@ static int second_ass_pass(Ass *ass, FILE *output) {
     }
 
     for (unsigned int ncommand = 0; ncommand < ass->amount_of_commands; ++ncommand) {
-        ASS_DEBUG("working with command number %d, command code: %d\n", ncommand, ass->commands[ncommand].cmd.cmd);
+        ASS_DEBUG("working with command number %d, command code: %d\n", ncommand, 
+                                                 ass->commands[ncommand].cmd.cmd);
+
         parse_command(ass,    &ass->commands[ncommand]);
         write_command(output, &ass->commands[ncommand]);
+
+        if (ncommand % 1000 == 0) {
+            printf("loading... parsed command %d\n", (int) ncommand);
+        }
     }
     
     return NO_ASS_ERR;
@@ -366,7 +362,7 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
 
     #include "../Common/commands.hpp"
     /*else*/ {
-        fprintf(stderr, "invalid command: %d\n", cmd);
+        fprintf(stderr, "invalid command: %s\n", cmd);
     
         return INCORRECT_CMD;
     }
@@ -374,8 +370,6 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
     int cmd_size = sizeof(char);
 
     if (command->cmd.val) {
-
-        ASS_DEBUG("added sizeof(int)\n");
 
         cmd_size += (int) sizeof(int);
     }
