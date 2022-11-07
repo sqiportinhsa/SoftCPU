@@ -6,8 +6,16 @@ PROC = Processor/build/processor.exe
 
 DISASM = Disassembler/build/disassembler.exe
 
+FOLDERS = Assembler/bin Assembler/build Processor/bin Processor/build Disassembler/bin Disassembler/build Processor/bin Common/bin
+
 .PHONY: all
-all: $(ASS) $(PROC) $(DISASM)
+all: folders $(ASS) $(PROC) $(DISASM)
+
+clean: 
+	find . -name "*.o" -delete
+
+folders:
+	mkdir -p $(FOLDERS)
 
 $(ASS): Assembler/bin/ass_main.o Assembler/bin/ass.o Stack/bin/stack.o Stack/bin/stack_logs.o Stack/bin/verification.o Common/bin/file_reading.o 
 	g++ Assembler/bin/ass_main.o Assembler/bin/ass.o Stack/bin/stack.o Stack/bin/stack_logs.o  Stack/bin/verification.o Common/bin/file_reading.o -o $(ASS) $(CPPFLAGS)
@@ -50,3 +58,4 @@ Stack/bin/verification.o: Stack/stack_verification.cpp
 
 Common/bin/file_reading.o: Common/file_reading.cpp Common/file_reading.hpp
 	g++ -c Common/file_reading.cpp -o Common/bin/file_reading.o $(CPPFLAGS)
+ 
