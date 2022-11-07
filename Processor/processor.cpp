@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <SDL2/SDL.h>
+#include <unistd.h>
 
 #include "processor.hpp"
 #include "../Common/file_reading.hpp"
@@ -16,6 +18,11 @@ static int pop (CMD cmd, CPU *cpu, char cmd_reg, int cmd_val);
 static int push(CMD cmd, CPU *cpu, char cmd_reg, int cmd_val);
 static int calc_sqrt(CPU *cpu);
 
+static void init_video     (CPU *cpu);
+static void destruct_video (CPU *cpu);
+static void render_video   (CPU *cpu);
+
+static int sleep_cmd(CPU *cpu);
 
 const char *default_input = "output.bin";
 
@@ -150,6 +157,20 @@ static int calc_sqrt(CPU *cpu) {
     return NO_CPU_ERR;
 }
 
+static int sleep_cmd(CPU *cpu) {
+    int errors = NO_CPU_ERR;
+
+    int delay = StackPop(cpu->cpu_stack, &errors);
+
+    if (errors) {
+        return STACK_ERR;
+    }
+
+    usleep(delay);
+
+    return NO_CPU_ERR;
+}
+
 int prepare_cpu(CPU *cpu, int argc, const char **argv) {
     int errors = NO_CPU_ERR;
 
@@ -248,6 +269,10 @@ int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, 
 
     cpu->code_len = code_len;
 
+    #ifdef VIDEO
+    init_video(cpu);
+    #endif
+
     return NO_CPU_ERR;
 }
 
@@ -270,6 +295,10 @@ int CPU_destructor(CPU *cpu) {
     cpu->code_len       = 0;
     cpu->ass_version    = 0;
     cpu->ip             = 0;
+
+    #ifdef VIDEO
+    destruct_video(cpu);
+    #endif
 
     return NO_CPU_ERR;
 }
@@ -326,4 +355,45 @@ void real_dump_cpu(CPU *cpu, FILE *logfile, const char *file, const char *func, 
     }
 
     fflush(logfile);
+}
+
+static void init_video(CPU *cpu) {
+    SDL_Init (SDL_INIT_VIDEO);
+    SDL_CreateWindowAndRenderer (Screen_width, Screen_height, 0, &cpu->window, &cpu->renderer);
+    SDL_SetRenderDrawColor (cpu->renderer, 0, 0, 0, 255);
+    SDL_RenderClear (cpu->renderer);
+    SDL_RenderPresent (cpu->renderer);
+}
+
+static void destruct_video(CPU *cpu) {
+    SDL_DestroyRenderer (cpu->renderer);
+    SDL_DestroyWindow (cpu->window);
+    SDL_Quit ();
+
+    cpu->renderer = nullptr;
+    cpu->window   = nullptr;
+}
+
+static void render_video(CPU *cpu) {
+    assert(cpu != nullptr);
+
+    Color_wrapper cell = {};
+
+    SDL_SetRenderDrawColor (cpu->renderer, 0, 0, 0, 255);
+    SDL_RenderClear (cpu->renderer);
+
+    for (int i = 0; i < Screen_height; ++i) {
+        for (int j = 0; j < Screen_width; ++j) {
+
+            cell.arg = cpu->ram[Screen_width*i + j];
+
+            SDL_SetRenderDrawColor (cpu->renderer, cell.color.r,
+                                                   cell.color.g,
+                                                   cell.color.b, 255);
+
+            SDL_RenderDrawPoint(cpu->renderer, j, i);
+        }
+    }
+
+    SDL_RenderPresent(cpu->renderer);
 }

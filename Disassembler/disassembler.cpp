@@ -8,7 +8,7 @@
 
 static bool binary_is_ok(Disasm *disasm);
 
-static void print_args(char cmd, Disasm *disasm, FILE *output);
+static void print_args(CMD cmd, Disasm *disasm, FILE *output);
 
 static bool marker_for_ip(size_t ip, int *markers, int markers_amount);
 
@@ -38,7 +38,7 @@ void disassemble(Disasm *disasm, const char *output_name) {
     while (n_command < disasm->amount_of_cmds && disasm->ip < disasm->code_len) {
         fprintf(stderr, "%d", n_command);
 
-        char cmd = *((char*) (disasm->code + disasm->ip));
+        CMD cmd = *((CMD*) (disasm->code + disasm->ip));
 
         if (marker_for_ip(disasm->ip, disasm->markers, disasm->amount_of_markers)) {
             fprintf(output, ":%zu\n", disasm->ip);
@@ -46,15 +46,13 @@ void disassemble(Disasm *disasm, const char *output_name) {
 
         disasm->ip += sizeof(char);
 
-        fprintf(stderr, "%d", cmd);
-
-        switch (cmd & CMD) {
+        switch (cmd.cmd) {
             #include "../Common/commands.hpp"
             default:
                 return;
         }
 
-        if (cmd == CMD_HLT) {
+        if (cmd.cmd == CMD_HLT) {
             break;
         }
 
@@ -84,11 +82,11 @@ bool get_markers(Disasm *disasm) {
     size_t ip        = disasm->ip;
 
     while (n_command < disasm->amount_of_cmds && ip < disasm->code_len) {
-        char cmd = *((char*) (disasm->code + ip));
+        CMD cmd = *((CMD*) (disasm->code + ip));
 
         ip += sizeof(char);
 
-        switch (cmd & CMD) {
+        switch (cmd.cmd) {
             #include "../Common/commands.hpp"
             default:
                 return false;
@@ -118,7 +116,7 @@ bool init_disasm(Disasm *disasm, const char *input_name) {
 
     for (size_t i = 0; i < 15; ++i) {
         char c = *(disasm->code + i);
-        printf("%d", c);
+        //printf(" %d ", c);
     }
 
     if (!binary_is_ok(disasm)) {
@@ -181,37 +179,37 @@ static bool binary_is_ok(Disasm *disasm) {
     return true;
 }
 
-static void print_args(char cmd, Disasm *disasm, FILE *output) {
+static void print_args(CMD cmd, Disasm *disasm, FILE *output) {
     int  cmd_val = 0;
     char cmd_reg = 0;
 
-    if (cmd & VAL) {
+    if (cmd.val) {
         cmd_val = *((int*)  (disasm->code + disasm->ip));
         disasm->ip += sizeof(int);
     }
 
-    if (cmd & REG) {
+    if (cmd.reg) {
         cmd_reg = *((char*) (disasm->code + disasm->ip));
         disasm->ip += sizeof(char);
     }
 
-    if (cmd & RAM) {
+    if (cmd.ram) {
         fprintf(output, "[");
     }
     
-    if (cmd & REG) {
+    if (cmd.reg) {
         fprintf(output, "r%cx", 'a' - cmd_reg + 1);
     }
 
-    if (cmd & REG && cmd & VAL) {
+    if (cmd.reg && cmd.val) {
         fprintf(output, " + ");
     }
 
-    if (cmd & VAL) {
+    if (cmd.val) {
         fprintf(output, "%d", cmd_val);
     }
 
-    if (cmd & RAM) {
+    if (cmd.ram) {
         fprintf(output, "]");
     }
 }

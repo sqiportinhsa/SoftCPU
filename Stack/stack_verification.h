@@ -3,10 +3,10 @@
 
 #include "stack.h"
 
-#define DEEP_VERIFICATION
-#define CANARY_VERIFICATION
-#define HASH_VERIFICATION
-#define SAFEMODE
+// #define DEEP_VERIFICATION
+// #define CANARY_VERIFICATION
+// #define HASH_VERIFICATION
+// #define SAFEMODE
 
 #define StackVerificator(stk) \
     RealStackVerificator(stk, __FILE__, __PRETTY_FUNCTION__, __LINE__)

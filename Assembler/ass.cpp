@@ -204,6 +204,10 @@ static int first_ass_pass(Ass *ass) {
 
         ++nsym;
         ++ncommand;
+
+        if (ncommand % 1000 == 0) {
+            printf("%d\n", ncommand);
+        }
     }
 
     ass->amount_of_code_strings = ncommand;

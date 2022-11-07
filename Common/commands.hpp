@@ -84,6 +84,14 @@ DEF_CMD(SQRT, 18, NO_ARGS, {
     cpu_err |= calc_sqrt(cpu);
 })
 
+DEF_CMD(RENDER, 19, NO_ARGS, {
+    render_video(cpu);
+})
+
+DEF_CMD(SLEEP, 20, NO_ARGS, {
+    sleep_cmd(cpu);
+})
+
 
 #undef No_args
 #undef Standart_args

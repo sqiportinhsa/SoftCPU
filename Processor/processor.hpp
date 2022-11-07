@@ -1,12 +1,18 @@
 #ifndef PROCESSOR
 #define PROCESSOR
 
+#include <SDL2/SDL.h>
 #include "../Common/common.hpp"
 #include "../Stack/stack.h"
 
+#define VIDEO
+
+const int Screen_width  = 100;
+const int Screen_height = 100;
+
 const int Proc_version   = 3;
 const int Reg_amount     = 5;
-const int RAM_size       = 100;
+const int RAM_size       = Screen_height * Screen_width;
 
 
 struct CPU_logs{
@@ -16,18 +22,31 @@ struct CPU_logs{
 };
 
 struct CPU {
-    CPU_logs*   logs                  = nullptr;
-    char*       code                  = nullptr;
-    Stack*      cpu_stack             = nullptr;
-    Stack*      adr_stack             = nullptr;
-    size_t      ip                    = 0;
-    size_t      code_len              = 0;
-    int         amount_of_cmds        = 0;
-    int         ass_version           = 0;
-    int         verification_const    = 0;
-    int         registers[Reg_amount] = {};
-    int         ram[RAM_size]         = {};
-    int         stk_err               = NO_ERROR;
+    CPU_logs*     logs                  = nullptr;
+    char*         code                  = nullptr;
+    Stack*        cpu_stack             = nullptr;
+    Stack*        adr_stack             = nullptr;
+    size_t        ip                    = 0;
+    size_t        code_len              = 0;
+    int           amount_of_cmds        = 0;
+    int           ass_version           = 0;
+    int           verification_const    = 0;
+    int           registers[Reg_amount] = {};
+    int           ram[RAM_size]         = {};
+    int           stk_err               = NO_ERROR;
+    SDL_Renderer* renderer              = nullptr;
+    SDL_Window*   window                = nullptr;
+};
+
+struct Color {
+    unsigned char r = 0; 
+    unsigned char g = 0;
+    unsigned char b = 0;
+};
+
+union Color_wrapper {
+    int arg;
+    Color color;
 };
 
 enum CPU_errors {
