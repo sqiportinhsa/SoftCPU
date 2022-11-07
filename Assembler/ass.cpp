@@ -12,14 +12,15 @@ static Register get_reg_num(char *ptr);
 static int first_ass_pass(Ass *ass);
 static int second_ass_pass(Ass *ass, FILE *output);
 
-static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker);
-static size_t process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len);
+static size_t process_marker  (Ass *ass, size_t nsym, int position_in_assembled_code, 
+                                                               unsigned int nmarker);
+static size_t process_command (Ass *ass, unsigned int ncommand, size_t nsym, int cmd_len);
 
 static void write_command(FILE *output, const Command *command);
 
 static int parse_command(Ass *ass, Command *command, int *index_in_assembled_code = nullptr);
 
-static int verify_markers(const Marker *markers, int amount_of_markers);
+static int verify_markers(const Marker *markers, unsigned int amount_of_markers);
 
 static int parse_for_pop  (Command *command, int cmd_num);
 static int parse_for_push (Command *command, int cmd_num);
@@ -71,7 +72,7 @@ int ass_constructor(Ass *ass, CLArgs *args) {
 
     ass->amount_of_code_symbols = read_file(ass->code, ass->amount_of_code_symbols, args->input);
 
-    ass->amount_of_code_strings = count_strings(ass->code, ass->amount_of_code_symbols);
+    ass->amount_of_code_strings = (unsigned int) count_strings(ass->code, ass->amount_of_code_symbols);
 
 
     ass->commands = (Command*) calloc((size_t) ass->amount_of_code_strings, sizeof(Command));
@@ -157,8 +158,10 @@ static int first_ass_pass(Ass *ass) {
     ass->commands[0].cmd_ptr = &(ass->code[0]);
 
     int errors   = 0;
-    int ncommand = 0;
-    int  nmarker = 0;
+
+    unsigned int ncommand = 0;
+    unsigned int  nmarker = 0;
+
     size_t  nsym = 0;
 
     int position_in_assembled_code = 3 * sizeof(int);
@@ -206,7 +209,7 @@ static int first_ass_pass(Ass *ass) {
         ++ncommand;
 
         if (ncommand % 1000 == 0) {
-            printf("%d\n", ncommand);
+            printf("loading... parsed command %d\n", (int) ncommand);
         }
     }
 
@@ -217,7 +220,9 @@ static int first_ass_pass(Ass *ass) {
     return NO_ASS_ERR;
 }
 
-static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, int nmarker) {
+static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_code, 
+                                                              unsigned int nmarker) {
+
     assert(ass != nullptr);
     
     ++nsym;
@@ -233,7 +238,7 @@ static size_t process_marker(Ass *ass, size_t nsym, int position_in_assembled_co
     return nsym;
 }
 
-static size_t process_command(Ass *ass, int ncommand, size_t nsym, int cmd_len) {
+static size_t process_command(Ass *ass, unsigned int ncommand, size_t nsym, int cmd_len) {
     assert(ass != nullptr);
     
     ASS_DEBUG("index of command first symbol: %zu. First symbol: %c\n", nsym, ass->code[nsym]);
@@ -273,7 +278,7 @@ static int second_ass_pass(Ass *ass, FILE *output) {
         return UNEXP_NULLPTR;
     }
 
-    for (int ncommand = 0; ncommand < ass->amount_of_commands; ++ncommand) {
+    for (unsigned int ncommand = 0; ncommand < ass->amount_of_commands; ++ncommand) {
         ASS_DEBUG("working with command number %d, command code: %d\n", ncommand, ass->commands[ncommand].cmd.cmd);
         parse_command(ass,    &ass->commands[ncommand]);
         write_command(output, &ass->commands[ncommand]);
@@ -492,7 +497,7 @@ static int parse_for_jump(Command *command, int cmd_num, Ass *ass) {
     command->cmd.cmd = cmd_num;
     command->cmd.val = 1;
 
-    for (int nmarker = 0; nmarker < ass->amount_of_markers; ++nmarker) {
+    for (unsigned int nmarker = 0; nmarker < ass->amount_of_markers; ++nmarker) {
 
         if (strncasecmp(ass->markers[nmarker].ptr, command->val_ptr, 
                                     ass->markers[nmarker].len) == 0) {
@@ -539,12 +544,12 @@ static int get_ram_arg(Command *command, int shift) {
     return NO_ASS_ERR;
 }
 
-static int verify_markers(const Marker *markers, int amount_of_markers) {
+static int verify_markers(const Marker *markers, unsigned int amount_of_markers) {
     assert(markers != nullptr && "nullptr to markers");
 
     /*verify pointers*/
 
-    for (int i = 0; i < amount_of_markers; ++i) {
+    for (unsigned int i = 0; i < amount_of_markers; ++i) {
         if (markers[i]. ptr == nullptr) {
             return UNEXP_NULLPTR;
         }
@@ -552,8 +557,8 @@ static int verify_markers(const Marker *markers, int amount_of_markers) {
 
     /*checkup for identical markers*/
 
-    for (int i = 0; i < amount_of_markers; ++i) {
-        for (int j = i + 1; j < amount_of_markers; ++j) {
+    for (unsigned int i = 0; i < amount_of_markers; ++i) {
+        for (unsigned int j = i + 1; j < amount_of_markers; ++j) {
             if (markers[i].len == markers[j].len) {
                 if (strncmp(markers[i].ptr, markers[j].ptr, markers[i].len) == 0) {
                     return SAME_MARKERS;

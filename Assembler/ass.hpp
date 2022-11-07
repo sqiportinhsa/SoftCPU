@@ -46,16 +46,16 @@ struct Marker {
 };
 
 struct Ass {
-    Command*     commands;
-    Marker*      markers;
-    char*        code;
-    size_t       amount_of_code_symbols;
-    int          amount_of_code_strings;
-    int          amount_of_commands;
-    int          amount_of_markers;
-    const char*  input_name;
-    const char*  output_name;
-};
+    Command*       commands;
+    Marker*        markers;
+    char*          code;
+    size_t         amount_of_code_symbols;
+    unsigned int   amount_of_code_strings;
+    unsigned int   amount_of_commands;
+    unsigned int   amount_of_markers;
+    const char*    input_name;
+    const char*    output_name;
+};  
 
 enum Register {
     NOT_REG = -1,
