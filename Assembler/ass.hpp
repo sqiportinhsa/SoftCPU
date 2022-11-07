@@ -11,6 +11,7 @@
 const int Ass_version = 3;
 const int Max_cmd_len = 10;
 
+
 #ifdef DEBUG_ASS
 #define ASS_DEBUG(format, ...) fprintf(stderr, format, ##__VA_ARGS__)
 #else

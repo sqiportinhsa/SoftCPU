@@ -32,6 +32,7 @@ static int get_args_with_first_reg(Command *command, int *shift);
 static int get_args_with_first_val(Command *command, int *shift);
 
 static size_t skip_comment(char *pointer);
+static size_t skip_spaces_and_comments(char *pointer);
 
 
 const char *default_input_filename  = "input.asm";
@@ -174,11 +175,13 @@ static int first_ass_pass(Ass *ass) {
 
         ASS_DEBUG("start\n");
 
-        nsym += skip_spaces_and_void_lines(ass->code + nsym);
+        nsym += skip_spaces_and_comments(ass->code + nsym);
 
-        ASS_DEBUG("index after skipping spaces: %zu\n", nsym);
+        if (ass->code[nsym] == '\0') {
+            break;
+        }
 
-        nsym += skip_comment(ass->code + nsym);
+        ASS_DEBUG("index after skipping spaces and comments: %zu\n", nsym);
 
         ASS_DEBUG("number of line %d first valuable sym: %zu\n",
                                                 ncommand, nsym);
@@ -363,7 +366,7 @@ static int parse_command(Ass *ass, Command *command, int *index_in_assembled_cod
 
     #include "../Common/commands.hpp"
     /*else*/ {
-        fprintf(stderr, "invalid command line: %s\n", cmd);
+        fprintf(stderr, "invalid command: %d\n", cmd);
     
         return INCORRECT_CMD;
     }
@@ -686,6 +689,20 @@ static size_t skip_comment(char *pointer) {
         i += skip_to_newline (pointer + i) + 1;
         i += skip_spaces     (pointer + i);
         i += skip_comment    (pointer + i);
+    }
+
+    return i;
+}
+
+static size_t skip_spaces_and_comments(char *pointer) {
+    assert (pointer != nullptr && "pointer is nullptr");
+
+    size_t i = 0;
+
+    for (; *(pointer + i) == '\n' || *(pointer + i) == ' ' || *(pointer + i) == ';'; ++i) {
+        if (*(pointer + i) == ';') {
+            i += skip_to_newline(pointer + i);
+        }
     }
 
     return i;
