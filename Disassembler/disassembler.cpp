@@ -35,8 +35,8 @@ void disassemble(Disasm *disasm, const char *output_name) {
 
     int n_command = 0;
 
-    while (n_command < disasm->amount_of_cmds && disasm->ip < disasm->code_len) {
-        fprintf(stderr, "%d", n_command);
+    while (n_command < disasm->amount_of_cmds && disasm->ip < disasm->code_len - 1) {
+        fprintf(stderr, " %d \n", n_command);
 
         CMD cmd = *((CMD*) (disasm->code + disasm->ip));
 
@@ -50,10 +50,6 @@ void disassemble(Disasm *disasm, const char *output_name) {
             #include "../Common/commands.hpp"
             default:
                 return;
-        }
-
-        if (cmd.cmd == CMD_HLT) {
-            break;
         }
 
         ++n_command;
@@ -82,6 +78,8 @@ bool get_markers(Disasm *disasm) {
     size_t ip        = disasm->ip;
 
     while (n_command < disasm->amount_of_cmds && ip < disasm->code_len) {
+        fprintf(stderr, " %d \n", n_command);
+        
         CMD cmd = *((CMD*) (disasm->code + ip));
 
         ip += sizeof(char);
@@ -91,6 +89,8 @@ bool get_markers(Disasm *disasm) {
             default:
                 return false;
         }
+
+        ++n_command;
     }
 
     disasm->amount_of_markers = n_marker;
@@ -145,6 +145,8 @@ CLArgs get_cmd_line_args(int argc, const char **argv) {
     if (clargs.output == nullptr) {
         clargs.output = default_output_filename;
     }
+
+    printf("%s %s\n", clargs.input, clargs.output);
 
     return clargs;
 }

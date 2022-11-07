@@ -24,7 +24,7 @@ int main(int argc, const char **argv) {
 
     disassemble(&disasm, clargs.output);
 
-    free(&disasm);
+    free_disasm(&disasm);
 
     return 0;
 }
