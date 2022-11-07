@@ -1,5 +1,0 @@
-PUSH 1
-PUSH 20
-ADD
-OUT
-HLT
