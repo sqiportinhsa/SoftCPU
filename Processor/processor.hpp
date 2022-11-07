@@ -6,16 +6,19 @@
 #include "../Stack/stack.h"
 
 
-#define VIDEO
+//#define VIDEO
 
-const int Sqr_size      = 5;
-const int Screen_width  = 100 * Sqr_size;
-const int Screen_height = 100 * Sqr_size;
 
-const int Proc_version   = 3;
-const int Reg_amount     = 5;
-const int RAM_size       = Screen_height * Screen_width;
+const int Proc_version     = 3;
+const int Reg_amount       = 5;
+const int Default_ram_size = 100;
 
+
+struct Vid_param {
+    int sqr_size   = 1;
+    int scr_width  = 100;
+    int scr_height = 100;
+};
 
 struct CPU_logs{
     const char* file_of_creation;
@@ -36,8 +39,10 @@ struct CPU {
     int*          registers             = nullptr;
     int*          ram                   = nullptr;
     int           stk_err               = NO_ERROR;
+    int           ram_size              = 0;
     SDL_Renderer* renderer              = nullptr;
     SDL_Window*   window                = nullptr;
+    Vid_param     video_param           = {};
 };
 
 struct Color {
