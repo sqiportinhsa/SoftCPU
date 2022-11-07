@@ -22,8 +22,6 @@ static void init_video     (CPU *cpu);
 static void destruct_video (CPU *cpu);
 static void render_video   (CPU *cpu);
 
-static Vid_param get_video_params();
-
 static int sleep_cmd(CPU *cpu);
 
 const char *default_input = "output.bin";
@@ -179,18 +177,6 @@ int prepare_cpu(CPU *cpu, int argc, const char **argv) {
 
     size_t code_len = count_elements_in_file(input_filename);
 
-    #ifdef VIDEO
-
-    cpu->video_param = get_video_params();
-
-    cpu->ram_size = cpu->video_param.scr_height * cpu->video_param.scr_width;
-
-    #else
-
-    cpu->ram_size = Default_ram_size;
-
-    #endif
-
     errors |= CPU_constructor(cpu, code_len);
 
     if (errors) {
@@ -207,18 +193,6 @@ int prepare_cpu(CPU *cpu, int argc, const char **argv) {
 
     return NO_CPU_ERR;
     
-}
-
-static Vid_param get_video_params() {
-    Vid_param parameters = {};
-
-    printf("enter screen parameters - width, height and amount of pixels for one-color square:\n");
-
-    scanf("%d", &parameters.scr_width);
-    scanf("%d", &parameters.scr_height);
-    scanf("%d", &parameters.sqr_size);
-    
-    return parameters;
 }
 
 static const char* get_input_filename(int argc, const char **argv) {
@@ -287,7 +261,7 @@ int real_CPU_constructor(CPU *cpu, size_t code_len, int line, const char* func, 
 
     allocate_memory(cpu->logs, CPU_logs, 1);
 
-    allocate_memory(cpu->ram,       int, (size_t) cpu->ram_size);
+    allocate_memory(cpu->ram,       int, RAM_size);
 
     allocate_memory(cpu->registers, int, Reg_amount);
 
@@ -395,9 +369,7 @@ void real_dump_cpu(CPU *cpu, FILE *logfile, const char *file, const char *func, 
 
 static void init_video(CPU *cpu) {
     SDL_Init (SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer (cpu->video_param.scr_width, cpu->video_param.scr_height, 
-                                                        0, &cpu->window, &cpu->renderer);
-
+    SDL_CreateWindowAndRenderer (Screen_width, Screen_height, 0, &cpu->window, &cpu->renderer);
     SDL_SetRenderDrawColor (cpu->renderer, 0, 0, 0, 255);
     SDL_RenderClear (cpu->renderer);
     SDL_RenderPresent (cpu->renderer);
@@ -419,19 +391,19 @@ static void render_video(CPU *cpu) {
 
     SDL_Rect rect = {};
 
-    rect.h = cpu->video_param.sqr_size;
-    rect.w = cpu->video_param.sqr_size;
+    rect.h = Sqr_size;
+    rect.w = Sqr_size;
 
     SDL_SetRenderDrawColor (cpu->renderer, 0, 0, 0, 255);
     SDL_RenderClear        (cpu->renderer);
 
-    for (int i = 0; i < cpu->video_param.scr_height; ++i) {    //vertical   coordinate
-        for (int j = 0; j < cpu->video_param.scr_width; ++j) { //horisontal coordinate
+    for (int i = 0; i < Screen_height; ++i) {    //vertical   coordinate
+        for (int j = 0; j < Screen_width; ++j) { //horisontal coordinate
 
-            cell.arg = cpu->ram[cpu->video_param.scr_width*i + j];
+            cell.arg = cpu->ram[Screen_width*i + j];
 
-            rect.x = j * cpu->video_param.sqr_size;
-            rect.y = i * cpu->video_param.sqr_size;
+            rect.x = j * Sqr_size;
+            rect.y = i * Sqr_size;
 
             SDL_SetRenderDrawColor(cpu->renderer, cell.color.r,
                                                   cell.color.g,
