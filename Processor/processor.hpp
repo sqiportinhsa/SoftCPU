@@ -9,6 +9,7 @@
 
 const int Screen_width  = 100;
 const int Screen_height = 100;
+const int Sqr_size      = 5;
 
 const int Proc_version   = 3;
 const int Reg_amount     = 5;

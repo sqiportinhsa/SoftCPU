@@ -38,7 +38,7 @@ int calculate(CPU *cpu) {
     int cpu_err   = NO_CPU_ERR;
 
     while (cpu->ip < cpu->code_len) {
-        
+
         CMD cmd = *((CMD*) (cpu->code + cpu->ip));
         cpu->ip += sizeof(char);
 
@@ -378,6 +378,10 @@ static void render_video(CPU *cpu) {
 
     Color_wrapper cell = {};
 
+    SDL_Rect rect = {};
+    rect.h = Sqr_size;
+    rect.w = Sqr_size;
+
     SDL_SetRenderDrawColor (cpu->renderer, 0, 0, 0, 255);
     SDL_RenderClear (cpu->renderer);
 
@@ -386,11 +390,14 @@ static void render_video(CPU *cpu) {
 
             cell.arg = cpu->ram[Screen_width*i + j];
 
-            SDL_SetRenderDrawColor (cpu->renderer, cell.color.r,
-                                                   cell.color.g,
-                                                   cell.color.b, 255);
+            rect.x = j * Sqr_size;
+            rect.y = i * Sqr_size;
 
-            SDL_RenderDrawPoint(cpu->renderer, j, i);
+            SDL_SetRenderDrawColor(cpu->renderer, cell.color.r,
+                                                  cell.color.g,
+                                                  cell.color.b, 255);
+
+            SDL_RenderFillRect(cpu->renderer, &rect);
         }
     }
 
